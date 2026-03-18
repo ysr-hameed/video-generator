@@ -11,7 +11,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 WIDTH = 1280
 HEIGHT = 720
-FPS = 30
+FPS = 15
 MIN_WORDS_PER_SCENE = 5
 MAX_WORDS_PER_SCENE = 9
 PARTICLE_COUNT = 30
@@ -36,8 +36,9 @@ DARK_BG_COLORS = [
 ANIMATIONS = [
     "slide_up", "slide_down", "slide_left", "slide_right",
     "zoom_in", "zoom_out", "bounce", "fade_in", "fade_out",
-    "shake", "typewriter", "wave", "pulse", "flip", "spiral",
-    "elastic", "flash", "glow_pulse", "blur_reveal", "slide_arc"
+    "shake", "typewriter", "wave", "pulse", "elastic",
+    "slide_arc", "pop_in", "squeeze_in", "float_up", "drop_in",
+    "glide_left", "glide_right", "expand_center", "reveal_letter"
 ]
 
 def format_vtt_time(seconds):
@@ -216,7 +217,7 @@ def create_scene_frame(words, bg, colors, frame_num, total_frames, output_path, 
     
     img.save(output_path, "PNG")
 
-def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_start, frame_num, total_frames, output_path, anim_type, is_title=False):
+def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_start, frame_num, total_frames, output_path, anim_type, is_title=False, is_list=False):
     img = Image.new("RGB", (WIDTH, HEIGHT), bg)
     draw = ImageDraw.Draw(img)
     
@@ -234,6 +235,8 @@ def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_star
     line_height = 80
     total_height = len(lines) * line_height
     start_y = (HEIGHT - total_height) // 2
+    
+    total_list_width = sum(get_text_width(" ".join(line)) for line in lines) + len(lines) * 30
     
     scene_progress = frame_num / total_frames if total_frames > 0 else 1
     WORD_SPACING = 25
@@ -258,22 +261,22 @@ def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_star
         for word_idx, word in enumerate(line_words):
             base_x, base_y = word_positions[line_idx][word_idx]
             
-            word_start_offset = frame_time - scene_start
             data_idx = sum(len(lines[i]) for i in range(line_idx)) + word_idx
             
-            if data_idx < len(word_data):
+            if data_idx < len(word_data) and word_data:
                 wd = word_data[data_idx]
-                word_start = wd["offset"] - scene_start
-                word_end = word_start + max(wd["duration"], 0.1)
+                word_speak_start = wd["offset"]
+                anim_duration = max(wd["duration"] * 0.5, 0.3)
             else:
-                word_start = data_idx * 0.3
-                word_end = word_start + 0.3
-                wd = {"duration": 0.3}
+                word_speak_start = scene_start + data_idx * 0.5
+                anim_duration = 0.3
             
-            if word_start_offset < word_start:
+            word_end_time = word_speak_start + anim_duration
+            
+            if frame_time < word_speak_start:
                 word_progress = 0
-            elif word_start_offset < word_end:
-                word_progress = min(1.0, (word_start_offset - word_start) / max(wd["duration"], 0.1))
+            elif frame_time < word_end_time:
+                word_progress = (frame_time - word_speak_start) / anim_duration
             else:
                 word_progress = 1
             
@@ -283,61 +286,73 @@ def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_star
             scale = 1.0
             
             if anim_type == "slide_up":
-                offset_y = int(120 * (1 - word_progress))
-            elif anim_type == "slide_down":
-                offset_y = int(-120 * (1 - word_progress))
-            elif anim_type == "zoom_in":
-                scale = 0.4 + 0.6 * word_progress
                 offset_y = int(80 * (1 - word_progress))
+            elif anim_type == "slide_down":
+                offset_y = int(-80 * (1 - word_progress))
+            elif anim_type == "zoom_in":
+                scale = 0.5 + 0.5 * word_progress
+                offset_y = int(50 * (1 - word_progress))
             elif anim_type == "zoom_out":
-                scale = 1.6 - 0.6 * word_progress
-                offset_y = int(-50 * (1 - word_progress))
+                scale = 1.5 - 0.5 * word_progress
+                offset_y = int(-30 * (1 - word_progress))
             elif anim_type == "bounce":
-                bounce = int(30 * abs(math.sin(word_progress * math.pi)))
+                bounce = int(20 * abs(math.sin(word_progress * math.pi)))
                 offset_y = -bounce
             elif anim_type == "slide_left":
-                offset_x = int(150 * (1 - word_progress))
+                offset_x = int(100 * (1 - word_progress))
             elif anim_type == "slide_right":
-                offset_x = int(-150 * (1 - word_progress))
+                offset_x = int(-100 * (1 - word_progress))
             elif anim_type == "fade_in":
                 pass
             elif anim_type == "fade_out":
                 pass
             elif anim_type == "shake":
                 if word_progress < 1:
-                    shake = int(30 * math.sin(word_progress * math.pi * 8) * (1 - word_progress))
+                    shake = int(20 * math.sin(word_progress * math.pi * 6) * (1 - word_progress))
                     offset_x = shake
             elif anim_type == "typewriter":
                 visible_chars = int(len(word) * word_progress)
                 word = word[:visible_chars] if visible_chars > 0 else ""
             elif anim_type == "wave":
-                wave = int(40 * math.sin(word_progress * math.pi * 3 + word_idx))
+                wave = int(25 * math.sin(word_progress * math.pi * 2 + word_idx))
                 offset_y = -wave
             elif anim_type == "pulse":
-                scale = 1.0 + 0.2 * math.sin(word_progress * math.pi)
-            elif anim_type == "flip":
-                scale = math.cos(word_progress * math.pi)
-                if scale < 0:
-                    scale = 0
-            elif anim_type == "spiral":
-                rotation = word_progress * math.pi * 3
-                offset_x = int(60 * math.cos(rotation))
-                offset_y = int(60 * math.sin(rotation))
+                scale = 1.0 + 0.15 * math.sin(word_progress * math.pi)
             elif anim_type == "elastic":
                 if word_progress < 1:
-                    elastic = 1 - math.pow(2, -12 * word_progress) * math.cos(word_progress * math.pi * 4)
-                    offset_y = int(-60 * (1 - elastic))
-            elif anim_type == "flash":
-                pass
-            elif anim_type == "glow_pulse":
-                pass
-            elif anim_type == "blur_reveal":
-                pass
+                    elastic = 1 - math.pow(2, -10 * word_progress) * math.cos(word_progress * math.pi * 3)
+                    offset_y = int(-40 * (1 - elastic))
             elif anim_type == "slide_arc":
-                arc_x = int(100 * math.sin(word_progress * math.pi))
-                arc_y = int(60 * (1 - word_progress))
+                arc_x = int(60 * math.sin(word_progress * math.pi))
+                arc_y = int(40 * (1 - word_progress))
                 offset_x = arc_x
                 offset_y = -arc_y
+            elif anim_type == "pop_in":
+                if word_progress < 0.5:
+                    scale = word_progress * 2
+                else:
+                    scale = 1.0 + (1 - word_progress) * 0.2
+            elif anim_type == "squeeze_in":
+                squeeze = 1.0 - 0.2 * abs(math.sin(word_progress * math.pi))
+                scale = squeeze
+            elif anim_type == "float_up":
+                offset_y = int(-50 * (1 - word_progress)) - int(15 * math.sin(word_progress * math.pi))
+            elif anim_type == "drop_in":
+                if word_progress < 0.8:
+                    bounce_y = int(20 * math.sin((word_progress / 0.8) * math.pi))
+                else:
+                    bounce_y = 0
+                offset_y = int(-60 * (1 - word_progress)) + bounce_y
+            elif anim_type == "glide_left":
+                offset_x = int(120 * (1 - word_progress))
+                offset_y = int(20 * math.sin(word_progress * math.pi * 2))
+            elif anim_type == "glide_right":
+                offset_x = int(-120 * (1 - word_progress))
+                offset_y = int(20 * math.sin(word_progress * math.pi * 2))
+            elif anim_type == "expand_center":
+                scale = 0.4 + 0.6 * word_progress
+            elif anim_type == "reveal_letter":
+                pass
             
             color = colors[word_idx % len(colors)]
             
@@ -358,6 +373,16 @@ def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_star
                     display_word = word.upper() if is_title else word
                     draw.text((base_x + offset_x, base_y + offset_y), display_word, fill=hex_to_rgb(color), font=font)
     
+    if is_list and scene_progress >= 0.5:
+        list_box = [
+            WIDTH // 2 - total_list_width // 2 - 30,
+            start_y - 15,
+            WIDTH // 2 + total_list_width // 2 + 30,
+            start_y + total_height + 15
+        ]
+        list_color = hex_to_rgb(colors[0])
+        draw.rounded_rectangle(list_box, radius=15, outline=list_color, width=3)
+    
     for _ in range(PARTICLE_COUNT):
         px = random.randint(0, WIDTH)
         py = random.randint(0, HEIGHT)
@@ -368,12 +393,12 @@ def create_scene_frame_sync(words, word_data, bg, colors, frame_time, scene_star
     
     img.save(output_path, "PNG")
 
-async def generate_audio_with_timings(text, output_file):
+async def generate_audio_with_timings(text, output_file, rate="-15%"):
     word_timings = []
     
     async def get_sentence_boundaries():
         boundaries = []
-        communicate = edge_tts.Communicate(text, "en-US-JennyNeural")
+        communicate = edge_tts.Communicate(text, "en-US-GuyNeural", rate=rate, volume="+50%")
         async for chunk in communicate.stream():
             if chunk["type"] == "SentenceBoundary":
                 boundaries.append({
@@ -383,7 +408,7 @@ async def generate_audio_with_timings(text, output_file):
         return boundaries
     
     async def save_audio():
-        communicate = edge_tts.Communicate(text, "en-US-JennyNeural")
+        communicate = edge_tts.Communicate(text, "en-US-GuyNeural", rate=rate, volume="+50%")
         await communicate.save(output_file)
     
     boundaries, _ = await asyncio.gather(get_sentence_boundaries(), save_audio())
@@ -432,6 +457,50 @@ def estimate_word_timings(sentence_boundaries, full_text):
     
     return word_timings
 
+def parse_markdown_script(text):
+    lines = text.split('\n')
+    segments = []
+    
+    for line in lines:
+        line = line.strip()
+        if not line:
+            continue
+        
+        if line.startswith('# '):
+            segments.append({
+                "type": "header1",
+                "text": line[2:].strip(),
+                "words": line[2:].split()
+            })
+        elif line.startswith('## '):
+            segments.append({
+                "type": "header2",
+                "text": line[3:].strip(),
+                "words": line[3:].split()
+            })
+        elif line.startswith('- ') or line.startswith('* '):
+            content = line[2:].strip()
+            segments.append({
+                "type": "list",
+                "text": content,
+                "words": content.split()
+            })
+        elif line.startswith('1. ') or line.startswith('2. ') or line.startswith('3. '):
+            content = line[3:].strip()
+            segments.append({
+                "type": "list",
+                "text": content,
+                "words": content.split()
+            })
+        else:
+            segments.append({
+                "type": "content",
+                "text": line,
+                "words": line.split()
+            })
+    
+    return segments
+
 def main():
     audio_dir = os.path.join(SCRIPT_DIR, "audio")
     frames_dir = os.path.join(SCRIPT_DIR, "frames")
@@ -452,50 +521,78 @@ def main():
     with open(os.path.join(SCRIPT_DIR, "script.txt"), "r") as f:
         script_text = f.read().strip()
     
+    segments = parse_markdown_script(script_text)
+    print(f"Script segments: {len(segments)}")
+    
+    tts_text = ' '.join([seg["text"] for seg in segments])
+    
     print("Generating TTS audio with word timings...")
     audio_path = os.path.join(audio_dir, "script.mp3")
-    boundaries, full_text = asyncio.run(generate_audio_with_timings(script_text, audio_path))
+    boundaries, full_text = asyncio.run(generate_audio_with_timings(tts_text, audio_path, rate="-15%"))
     
     audio_duration = get_audio_duration(audio_path)
     print(f"Audio duration: {audio_duration:.2f}s")
     
-    word_timings = estimate_word_timings(boundaries, script_text)
+    word_timings = estimate_word_timings(boundaries, tts_text)
     print(f"Word timings estimated: {len(word_timings)}")
     
     scenes = []
-    is_first_scene = True
+    segment_idx = 0
     
-    i = 0
-    while i < len(word_timings):
-        chunk_size = random.randint(MIN_WORDS_PER_SCENE, MAX_WORDS_PER_SCENE)
-        chunk_size = min(chunk_size, len(word_timings) - i)
+    for seg_idx, segment in enumerate(segments):
+        is_header = segment["type"] in ["header1", "header2"]
+        is_list = segment["type"] == "list"
         
-        scene_words = word_timings[i:i + chunk_size]
-        scene_text = " ".join([w["word"] for w in scene_words])
+        words = segment["words"]
+        if not words:
+            continue
         
-        start_time = scene_words[0]["offset"]
-        end_time = scene_words[-1]["offset"] + scene_words[-1]["duration"]
+        if is_header:
+            max_words_per_header = 5
+        else:
+            max_words_per_header = MAX_WORDS_PER_SCENE
         
-        bg_color = random.choice(DARK_BG_COLORS)
-        num_colors = random.randint(2, 3)
-        scene_colors = random.sample(NEON_COLORS, num_colors)
+        chunk_size = min(random.randint(MIN_WORDS_PER_SCENE, max_words_per_header), len(words))
         
-        scene_anim = random.choice(ANIMATIONS)
-        
-        scenes.append({
-            "words": [w["word"] for w in scene_words],
-            "word_data": scene_words,
-            "start_time": start_time,
-            "end_time": end_time,
-            "text": scene_text,
-            "bg": bg_color,
-            "colors": scene_colors,
-            "anim": scene_anim,
-            "is_title": is_first_scene
-        })
-        
-        is_first_scene = False
-        i += chunk_size
+        for i in range(0, len(words), chunk_size):
+            chunk = words[i:i + chunk_size]
+            if not chunk:
+                continue
+            
+            bg_color = random.choice(DARK_BG_COLORS)
+            num_colors = random.randint(2, 3)
+            scene_colors = random.sample(NEON_COLORS, num_colors)
+            
+            scene_anim = random.choice(ANIMATIONS)
+            
+            word_start = segment_idx
+            word_end = min(segment_idx + len(chunk), len(word_timings))
+            
+            if word_start < len(word_timings) and word_end <= len(word_timings):
+                start_time = word_timings[word_start]["offset"]
+                last_word_end = word_timings[word_end - 1]["offset"] + word_timings[word_end - 1]["duration"]
+                min_duration = 2.0
+                end_time = max(last_word_end + 0.3, start_time + min_duration)
+            else:
+                avg_dur = audio_duration / len(word_timings) if word_timings else 1
+                start_time = word_start * avg_dur
+                end_time = start_time + max(len(chunk) * avg_dur, 2.0)
+            
+            scenes.append({
+                "words": chunk,
+                "word_data": word_timings[word_start:word_end] if word_start < len(word_timings) and word_end <= len(word_timings) else [],
+                "start_time": start_time,
+                "end_time": end_time,
+                "text": " ".join(chunk),
+                "bg": bg_color,
+                "colors": scene_colors,
+                "anim": scene_anim,
+                "is_title": is_header and i == 0,
+                "is_list": is_list,
+                "segment_type": segment["type"]
+            })
+            
+            segment_idx = word_end
     
     print(f"Scenes: {len(scenes)}")
     
@@ -512,37 +609,71 @@ def main():
             f.write(f"{text}\n\n")
     
     print("Generating frames...")
-    frame = 0
-    total_audio_duration = audio_duration
     
-    for scene_idx, scene in enumerate(scenes):
-        scene_start = scene["start_time"]
-        scene_end = scene["end_time"]
-        scene_duration = scene_end - scene_start
-        scene_frames = int(scene_duration * FPS)
-        scene_frames = max(scene_frames, FPS // 2)
-        
-        for f in range(scene_frames):
-            frame_time = scene_start + (f / FPS)
-            create_scene_frame_sync(
-                scene["words"],
-                scene["word_data"],
-                scene["bg"],
-                scene["colors"],
-                frame_time,
-                scene_start,
-                f,
-                scene_frames,
-                os.path.join(frames_dir, f"frame_{frame:05d}.png"),
-                scene["anim"],
-                scene["is_title"]
-            )
-            frame += 1
-        
-        if scene_idx % 10 == 0:
-            print(f"Scene {scene_idx + 1}/{len(scenes)} - Anim: {scene['anim']} - Words: {len(scene['words'])}")
+    total_frames = int(audio_duration * FPS)
+    print(f"Total frames: {total_frames} (audio: {audio_duration:.2f}s)")
     
-    print(f"Total frames: {frame}")
+    prev_scene = None
+    
+    for frame_num in range(total_frames):
+        frame_time = frame_num / FPS
+        
+        current_scene = None
+        for scene in scenes:
+            if scene["start_time"] <= frame_time <= scene["end_time"]:
+                current_scene = scene
+                break
+        
+        if current_scene is None:
+            current_scene = prev_scene
+        
+        if current_scene is None:
+            img = Image.new("RGB", (WIDTH, HEIGHT), (10, 10, 15))
+            draw = ImageDraw.Draw(img)
+            for _ in range(PARTICLE_COUNT):
+                px = random.randint(0, WIDTH)
+                py = random.randint(0, HEIGHT)
+                r = random.randint(1, 4)
+                color = random.choice(NEON_COLORS[:5])
+                rgb = hex_to_rgb(color)
+                draw.ellipse([px, py, px+r*2, py+r*2], fill=rgb)
+            img.save(os.path.join(frames_dir, f"frame_{frame_num:05d}.png"), "PNG")
+            continue
+        
+        scene_start = current_scene["start_time"]
+        scene_end = current_scene["end_time"]
+        
+        words_to_show = []
+        revealed_count = 0
+        
+        for w_idx, wd in enumerate(current_scene["word_data"]):
+            word_speak_start = wd["offset"]
+            if frame_time >= word_speak_start:
+                revealed_count = w_idx + 1
+        
+        words_to_show = current_scene["words"][:revealed_count]
+        
+        prev_scene = current_scene
+        
+        create_scene_frame_sync(
+            words_to_show,
+            current_scene["word_data"][:revealed_count],
+            current_scene["bg"],
+            current_scene["colors"],
+            frame_time,
+            scene_start,
+            frame_num,
+            total_frames,
+            os.path.join(frames_dir, f"frame_{frame_num:05d}.png"),
+            current_scene["anim"],
+            current_scene.get("is_title", False),
+            current_scene.get("is_list", False)
+        )
+        
+        if frame_num % 500 == 0:
+            print(f"Frame {frame_num}/{total_frames}")
+    
+    print(f"Total frames: {total_frames}")
     
     print("Creating video...")
     result = subprocess.run([
@@ -556,6 +687,8 @@ def main():
         "-c:a", "aac",
         "-b:a", "192k",
         "-shortest",
+        "-map", "0:v",
+        "-map", "1:a",
         os.path.join(output_dir, "video.mp4")
     ], capture_output=True, text=True)
     

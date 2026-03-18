@@ -42,7 +42,7 @@ python main.py
 
 Edit these variables in `main.py`:
 
-- `FPS` - Frames per second (default: 30)
+- `FPS` - Frames per second (default: 15)
 - `WORDS_PER_LINE` - Words per scene (default: 5)
 - `JOKER_THEMES` - Color themes for different scenes
 - `ANIMATIONS` - List of animation types

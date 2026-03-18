@@ -1,210 +1,150 @@
 WEBVTT
 
 1
-00:00:00.100 --> 00:00:01.884
+00:00:00.100 --> 00:00:02.100
 WHAT IS AN API HOW
 
 2
-00:00:01.884 --> 00:00:05.147
-It Works An API, or Application Programming Interface, is
+00:00:01.580 --> 00:00:03.580
+It Works
 
 3
-00:00:05.147 --> 00:00:07.288
-a set of rules and protocols
+00:00:02.172 --> 00:00:04.249
+An API, or Application Programming Interface,
 
 4
-00:00:07.288 --> 00:00:09.786
-that allows different software applications to communicate
+00:00:03.949 --> 00:00:06.026
+is a set of rules and
 
 5
-00:00:09.786 --> 00:00:13.452
-with each other. Think of it as
+00:00:05.726 --> 00:00:07.802
+protocols that allows different software applications
 
 6
-00:00:13.452 --> 00:00:15.236
-a waiter in a restaurant
+00:00:07.502 --> 00:00:09.502
+to communicate with each other.
 
 7
-00:00:15.236 --> 00:00:18.447
-who takes your order from the kitchen and brings
+00:00:11.970 --> 00:00:13.970
+HOW APIS WORK
 
 8
-00:00:18.447 --> 00:00:18.507
-it back to you. The kitchen is
+00:00:12.858 --> 00:00:15.231
+Client sends a request to the API
 
 9
-00:00:18.507 --> 00:00:21.005
-like the server, you are the client,
+00:00:14.931 --> 00:00:16.931
+API processes and forwards to
 
 10
-00:00:21.005 --> 00:00:22.789
-and the waiter is the
+00:00:16.412 --> 00:00:18.412
+the server
 
 11
-00:00:22.789 --> 00:00:24.196
-API. APIs work through a request
+00:00:17.004 --> 00:00:19.004
+Server performs the operation
 
 12
-00:00:24.196 --> 00:00:26.982
-and response model. When a client
+00:00:18.188 --> 00:00:20.561
+Response is delivered back to the client
 
 13
-00:00:26.982 --> 00:00:29.837
-application wants to access data or functionality from
+00:00:20.261 --> 00:00:22.261
+REST APIS
 
 14
-00:00:29.837 --> 00:00:33.048
-a server, it sends a request to the API.
+00:00:20.853 --> 00:00:22.930
+REST APIs use standard HTTP methods:
 
 15
-00:00:33.112 --> 00:00:34.896
-This request contains specific information
+00:00:22.630 --> 00:00:24.630
+GET retrieves data
 
 16
-00:00:34.896 --> 00:00:37.394
-about what the client wants to do.
+00:00:23.518 --> 00:00:25.518
+POST creates new data
 
 17
-00:00:37.962 --> 00:00:40.103
-The API then processes this request
+00:00:24.703 --> 00:00:26.703
+PUT updates existing data
 
 18
-00:00:40.103 --> 00:00:42.244
-and forwards it to the server.
+00:00:25.887 --> 00:00:27.887
+DELETE removes data
 
 19
-00:00:42.524 --> 00:00:44.665
-The server performs the requested operation
+00:00:26.776 --> 00:00:28.776
+AUTHENTICATION
 
 20
-00:00:44.665 --> 00:00:47.163
-and sends back a response to the
+00:00:27.072 --> 00:00:29.148
+When you use an API, you
 
 21
-00:00:47.163 --> 00:00:50.017
-API, which then delivers it to the client.
+00:00:28.848 --> 00:00:30.848
+typically need:
 
 22
-00:00:49.962 --> 00:00:51.746
-The most common type of
+00:00:29.441 --> 00:00:31.441
+API key or access token
 
 23
-00:00:51.746 --> 00:00:53.530
-API is called REST, which
+00:00:30.921 --> 00:00:32.921
+Rate limiting to prevent abuse
 
 24
-00:00:53.530 --> 00:00:57.295
-stands for Representational State Transfer. REST APIs use
+00:00:32.402 --> 00:00:34.402
+Proper permissions for resources
 
 25
-00:00:57.295 --> 00:00:59.436
-standard HTTP methods like GET, POST,
+00:00:33.586 --> 00:00:35.586
+DATA FORMATS
 
 26
-00:00:59.436 --> 00:01:04.169
-PUT, and DELETE to perform different operations. GET
+00:00:34.178 --> 00:00:36.255
+APIs return data in various formats:
 
 27
-00:01:04.169 --> 00:01:07.023
-is used to retrieve data, POST to create
+00:00:35.955 --> 00:00:46.289
+JSON is the most popular
 
 28
-00:01:07.023 --> 00:01:09.878
-new data, PUT to update existing data, and
+00:00:45.989 --> 00:00:47.989
+XML is also common
 
 29
-00:01:09.878 --> 00:01:12.809
-DELETE to remove data. When you use an API,
+00:00:47.173 --> 00:00:49.173
+Uses key-value pairs
 
 30
-00:01:12.809 --> 00:01:14.593
-you typically need to include
+00:00:48.062 --> 00:00:50.062
+REAL-WORLD EXAMPLES
 
 31
-00:01:14.593 --> 00:01:17.447
-authentication credentials, often in the form of an
+00:00:48.654 --> 00:00:50.654
+Google Maps API for maps
 
 32
-00:01:17.447 --> 00:01:19.231
-API key or access token.
+00:00:50.134 --> 00:00:52.134
+Twitter API for social media
 
 33
-00:01:19.487 --> 00:01:22.698
-This helps the server identify who is making the
+00:00:51.615 --> 00:00:53.615
+Stripe for payments
 
 34
-00:01:22.698 --> 00:01:24.839
-request and ensure they have permission
+00:00:52.503 --> 00:00:54.503
+Weather APIs for forecasts
 
 35
-00:01:24.839 --> 00:01:26.623
-to access the requested resources.
-
-36
-00:01:26.737 --> 00:01:29.591
-Many APIs also use rate limiting to prevent
-
-37
-00:01:29.591 --> 00:01:31.732
-abuse and ensure fair usage among
-
-38
-00:01:31.732 --> 00:01:34.020
-all users. APIs return data
-
-39
-00:01:34.020 --> 00:01:36.518
-in various formats, with JSON being the
-
-40
-00:01:36.518 --> 00:01:40.171
-most popular. JSON is lightweight and easy
-
-41
-00:01:40.171 --> 00:01:41.955
-for both humans and machines
-
-42
-00:01:41.955 --> 00:01:44.270
-to read and parse. It uses key-value
-
-43
-00:01:44.270 --> 00:01:46.411
-pairs to represent data in a
-
-44
-00:01:46.411 --> 00:01:49.622
-structured way that can be easily transmitted over the
-
-45
-00:01:49.622 --> 00:01:52.385
-internet. Real-world examples of APIs include Google Maps
-
-46
-00:01:52.385 --> 00:01:55.239
-API for embedding maps, Twitter API for accessing
-
-47
-00:01:55.239 --> 00:01:58.093
-social media data, Payment APIs like Stripe for
-
-48
-00:01:58.093 --> 00:02:01.305
-processing transactions, and Weather APIs for retrieving forecast information.
-
-49
-00:02:04.737 --> 00:02:06.521
+00:00:53.688 --> 00:00:55.688
 APIs have revolutionized software development
 
-50
-00:02:06.521 --> 00:02:09.732
-by enabling different applications to work together seamlessly, creating
+36
+00:00:55.168 --> 00:00:57.168
+by enabling different applications to
 
-51
-00:02:09.732 --> 00:02:12.230
-interconnected digital ecosystems that power the modern
-
-52
-00:02:12.230 --> 00:02:12.587
-internet.
+37
+00:00:56.649 --> 00:00:58.649
+work together seamlessly.
 
