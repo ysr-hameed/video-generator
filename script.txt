@@ -1,4 +1,4 @@
-What is an API and How It Works
+What is an API How It Works
 
 An API, or Application Programming Interface, is a set of rules and protocols that allows different software applications to communicate with each other. Think of it as a waiter in a restaurant who takes your order from the kitchen and brings it back to you. The kitchen is like the server, you are the client, and the waiter is the API.
 

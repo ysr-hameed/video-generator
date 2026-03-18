@@ -1,286 +1,210 @@
 WEBVTT
 
 1
-00:00:00.000 --> 00:00:01.933
-WHAT IS AN API AND
+00:00:00.100 --> 00:00:01.884
+WHAT IS AN API HOW
 
 2
-00:00:01.933 --> 00:00:03.866
-HOW IT WORKS AN API,
+00:00:01.884 --> 00:00:05.147
+It Works An API, or Application Programming Interface, is
 
 3
-00:00:03.866 --> 00:00:05.799
-OR APPLICATION PROGRAMMING INTERFACE, IS
+00:00:05.147 --> 00:00:07.288
+a set of rules and protocols
 
 4
-00:00:05.799 --> 00:00:07.733
-A SET OF RULES AND
+00:00:07.288 --> 00:00:09.786
+that allows different software applications to communicate
 
 5
-00:00:07.733 --> 00:00:09.666
-PROTOCOLS THAT ALLOWS DIFFERENT SOFTWARE
+00:00:09.786 --> 00:00:13.452
+with each other. Think of it as
 
 6
-00:00:09.666 --> 00:00:11.599
-APPLICATIONS TO COMMUNICATE WITH EACH
+00:00:13.452 --> 00:00:15.236
+a waiter in a restaurant
 
 7
-00:00:11.599 --> 00:00:13.533
-OTHER. THINK OF IT AS
+00:00:15.236 --> 00:00:18.447
+who takes your order from the kitchen and brings
 
 8
-00:00:13.533 --> 00:00:15.466
-A WAITER IN A RESTAURANT
+00:00:18.447 --> 00:00:18.507
+it back to you. The kitchen is
 
 9
-00:00:15.466 --> 00:00:17.399
-WHO TAKES YOUR ORDER FROM
+00:00:18.507 --> 00:00:21.005
+like the server, you are the client,
 
 10
-00:00:17.399 --> 00:00:19.332
-THE KITCHEN AND BRINGS IT
+00:00:21.005 --> 00:00:22.789
+and the waiter is the
 
 11
-00:00:19.332 --> 00:00:21.266
-BACK TO YOU. THE KITCHEN
+00:00:22.789 --> 00:00:24.196
+API. APIs work through a request
 
 12
-00:00:21.266 --> 00:00:23.199
-IS LIKE THE SERVER, YOU
+00:00:24.196 --> 00:00:26.982
+and response model. When a client
 
 13
-00:00:23.199 --> 00:00:25.132
-ARE THE CLIENT, AND THE
+00:00:26.982 --> 00:00:29.837
+application wants to access data or functionality from
 
 14
-00:00:25.132 --> 00:00:27.066
-WAITER IS THE API. APIS
+00:00:29.837 --> 00:00:33.048
+a server, it sends a request to the API.
 
 15
-00:00:27.066 --> 00:00:28.999
-WORK THROUGH A REQUEST AND
+00:00:33.112 --> 00:00:34.896
+This request contains specific information
 
 16
-00:00:28.999 --> 00:00:30.932
-RESPONSE MODEL. WHEN A CLIENT
+00:00:34.896 --> 00:00:37.394
+about what the client wants to do.
 
 17
-00:00:30.932 --> 00:00:32.866
-APPLICATION WANTS TO ACCESS DATA
+00:00:37.962 --> 00:00:40.103
+The API then processes this request
 
 18
-00:00:32.866 --> 00:00:34.799
-OR FUNCTIONALITY FROM A SERVER,
+00:00:40.103 --> 00:00:42.244
+and forwards it to the server.
 
 19
-00:00:34.799 --> 00:00:36.732
-IT SENDS A REQUEST TO
+00:00:42.524 --> 00:00:44.665
+The server performs the requested operation
 
 20
-00:00:36.732 --> 00:00:38.665
-THE API. THIS REQUEST CONTAINS
+00:00:44.665 --> 00:00:47.163
+and sends back a response to the
 
 21
-00:00:38.665 --> 00:00:40.599
-SPECIFIC INFORMATION ABOUT WHAT THE
+00:00:47.163 --> 00:00:50.017
+API, which then delivers it to the client.
 
 22
-00:00:40.599 --> 00:00:42.532
-CLIENT WANTS TO DO. THE
+00:00:49.962 --> 00:00:51.746
+The most common type of
 
 23
-00:00:42.532 --> 00:00:44.465
-API THEN PROCESSES THIS REQUEST
+00:00:51.746 --> 00:00:53.530
+API is called REST, which
 
 24
-00:00:44.465 --> 00:00:46.399
-AND FORWARDS IT TO THE
+00:00:53.530 --> 00:00:57.295
+stands for Representational State Transfer. REST APIs use
 
 25
-00:00:46.399 --> 00:00:48.332
-SERVER. THE SERVER PERFORMS THE
+00:00:57.295 --> 00:00:59.436
+standard HTTP methods like GET, POST,
 
 26
-00:00:48.332 --> 00:00:50.265
-REQUESTED OPERATION AND SENDS BACK
+00:00:59.436 --> 00:01:04.169
+PUT, and DELETE to perform different operations. GET
 
 27
-00:00:50.265 --> 00:00:52.198
-A RESPONSE TO THE API,
+00:01:04.169 --> 00:01:07.023
+is used to retrieve data, POST to create
 
 28
-00:00:52.198 --> 00:00:54.132
-WHICH THEN DELIVERS IT TO
+00:01:07.023 --> 00:01:09.878
+new data, PUT to update existing data, and
 
 29
-00:00:54.132 --> 00:00:56.065
-THE CLIENT. THE MOST COMMON
+00:01:09.878 --> 00:01:12.809
+DELETE to remove data. When you use an API,
 
 30
-00:00:56.065 --> 00:00:57.998
-TYPE OF API IS CALLED
+00:01:12.809 --> 00:01:14.593
+you typically need to include
 
 31
-00:00:57.998 --> 00:00:59.932
-REST, WHICH STANDS FOR REPRESENTATIONAL
+00:01:14.593 --> 00:01:17.447
+authentication credentials, often in the form of an
 
 32
-00:00:59.932 --> 00:01:01.865
-STATE TRANSFER. REST APIS USE
+00:01:17.447 --> 00:01:19.231
+API key or access token.
 
 33
-00:01:01.865 --> 00:01:03.798
-STANDARD HTTP METHODS LIKE GET,
+00:01:19.487 --> 00:01:22.698
+This helps the server identify who is making the
 
 34
-00:01:03.798 --> 00:01:05.732
-POST, PUT, AND DELETE TO
+00:01:22.698 --> 00:01:24.839
+request and ensure they have permission
 
 35
-00:01:05.732 --> 00:01:07.665
-PERFORM DIFFERENT OPERATIONS. GET IS
+00:01:24.839 --> 00:01:26.623
+to access the requested resources.
 
 36
-00:01:07.665 --> 00:01:09.598
-USED TO RETRIEVE DATA, POST
+00:01:26.737 --> 00:01:29.591
+Many APIs also use rate limiting to prevent
 
 37
-00:01:09.598 --> 00:01:11.531
-TO CREATE NEW DATA, PUT
+00:01:29.591 --> 00:01:31.732
+abuse and ensure fair usage among
 
 38
-00:01:11.531 --> 00:01:13.465
-TO UPDATE EXISTING DATA, AND
+00:01:31.732 --> 00:01:34.020
+all users. APIs return data
 
 39
-00:01:13.465 --> 00:01:15.398
-DELETE TO REMOVE DATA. WHEN
+00:01:34.020 --> 00:01:36.518
+in various formats, with JSON being the
 
 40
-00:01:15.398 --> 00:01:17.331
-YOU USE AN API, YOU
+00:01:36.518 --> 00:01:40.171
+most popular. JSON is lightweight and easy
 
 41
-00:01:17.331 --> 00:01:19.265
-TYPICALLY NEED TO INCLUDE AUTHENTICATION
+00:01:40.171 --> 00:01:41.955
+for both humans and machines
 
 42
-00:01:19.265 --> 00:01:21.198
-CREDENTIALS, OFTEN IN THE FORM
+00:01:41.955 --> 00:01:44.270
+to read and parse. It uses key-value
 
 43
-00:01:21.198 --> 00:01:23.131
-OF AN API KEY OR
+00:01:44.270 --> 00:01:46.411
+pairs to represent data in a
 
 44
-00:01:23.131 --> 00:01:25.065
-ACCESS TOKEN. THIS HELPS THE
+00:01:46.411 --> 00:01:49.622
+structured way that can be easily transmitted over the
 
 45
-00:01:25.065 --> 00:01:26.998
-SERVER IDENTIFY WHO IS MAKING
+00:01:49.622 --> 00:01:52.385
+internet. Real-world examples of APIs include Google Maps
 
 46
-00:01:26.998 --> 00:01:28.931
-THE REQUEST AND ENSURE THEY
+00:01:52.385 --> 00:01:55.239
+API for embedding maps, Twitter API for accessing
 
 47
-00:01:28.931 --> 00:01:30.864
-HAVE PERMISSION TO ACCESS THE
+00:01:55.239 --> 00:01:58.093
+social media data, Payment APIs like Stripe for
 
 48
-00:01:30.864 --> 00:01:32.798
-REQUESTED RESOURCES. MANY APIS ALSO
+00:01:58.093 --> 00:02:01.305
+processing transactions, and Weather APIs for retrieving forecast information.
 
 49
-00:01:32.798 --> 00:01:34.731
-USE RATE LIMITING TO PREVENT
+00:02:04.737 --> 00:02:06.521
+APIs have revolutionized software development
 
 50
-00:01:34.731 --> 00:01:36.664
-ABUSE AND ENSURE FAIR USAGE
+00:02:06.521 --> 00:02:09.732
+by enabling different applications to work together seamlessly, creating
 
 51
-00:01:36.664 --> 00:01:38.598
-AMONG ALL USERS. APIS RETURN
+00:02:09.732 --> 00:02:12.230
+interconnected digital ecosystems that power the modern
 
 52
-00:01:38.598 --> 00:01:40.531
-DATA IN VARIOUS FORMATS, WITH
-
-53
-00:01:40.531 --> 00:01:42.464
-JSON BEING THE MOST POPULAR.
-
-54
-00:01:42.464 --> 00:01:44.397
-JSON IS LIGHTWEIGHT AND EASY
-
-55
-00:01:44.397 --> 00:01:46.331
-FOR BOTH HUMANS AND MACHINES
-
-56
-00:01:46.331 --> 00:01:48.264
-TO READ AND PARSE. IT
-
-57
-00:01:48.264 --> 00:01:50.197
-USES KEY-VALUE PAIRS TO REPRESENT
-
-58
-00:01:50.197 --> 00:01:52.131
-DATA IN A STRUCTURED WAY
-
-59
-00:01:52.131 --> 00:01:54.064
-THAT CAN BE EASILY TRANSMITTED
-
-60
-00:01:54.064 --> 00:01:55.997
-OVER THE INTERNET. REAL-WORLD EXAMPLES
-
-61
-00:01:55.997 --> 00:01:57.931
-OF APIS INCLUDE GOOGLE MAPS
-
-62
-00:01:57.931 --> 00:01:59.864
-API FOR EMBEDDING MAPS, TWITTER
-
-63
-00:01:59.864 --> 00:02:01.797
-API FOR ACCESSING SOCIAL MEDIA
-
-64
-00:02:01.797 --> 00:02:03.730
-DATA, PAYMENT APIS LIKE STRIPE
-
-65
-00:02:03.730 --> 00:02:05.664
-FOR PROCESSING TRANSACTIONS, AND WEATHER
-
-66
-00:02:05.664 --> 00:02:07.597
-APIS FOR RETRIEVING FORECAST INFORMATION.
-
-67
-00:02:07.597 --> 00:02:09.530
-APIS HAVE REVOLUTIONIZED SOFTWARE DEVELOPMENT
-
-68
-00:02:09.530 --> 00:02:11.464
-BY ENABLING DIFFERENT APPLICATIONS TO
-
-69
-00:02:11.464 --> 00:02:13.397
-WORK TOGETHER SEAMLESSLY, CREATING INTERCONNECTED
-
-70
-00:02:13.397 --> 00:02:15.330
-DIGITAL ECOSYSTEMS THAT POWER THE
-
-71
-00:02:15.330 --> 00:02:16.104
-MODERN INTERNET.
+00:02:12.230 --> 00:02:12.587
+internet.
 
