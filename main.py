@@ -15,24 +15,32 @@ FPS = 15
 TTS_SPEED = 1.2
 
 NEON_COLORS = [
-    "#FF073A", "#FF2400", "#FF4500", "#FF6347", "#FF6B6B", "#FF7F50", "#FF8C00",
-    "#FFD700", "#FFE135", "#ADFF2F", "#7FFF00", "#00FF00", "#39FF14", "#00FF41",
-    "#00FF7F", "#00FFFF", "#00BFFF", "#1E90FF", "#4169E1", "#0000FF", "#8A2BE2",
-    "#FF00FF", "#FF1493", "#FF69B4", "#DC143C", "#9B59B6", "#8E44AD",
-    "#3498DB", "#2980B9", "#1ABC9C", "#16A085", "#2ECC71", "#27AE60",
+    "#00FFFF", "#FF00FF", "#00FF00", "#FFFF00", "#FF0080", "#00FF80",
+    "#8000FF", "#FF8000", "#0080FF", "#FF0088", "#80FF00", "#FF00B0",
+    "#00B0FF", "#B0FF00", "#FF00B0", "#00FFB0", "#B000FF", "#FFB000",
 ]
 
 TTS_VOICE = "en-US-JennyNeural"
 
 BG_COLORS = [
-    (10, 10, 20), (15, 15, 25), (8, 8, 18), (12, 12, 22), (20, 15, 25),
+    (20, 20, 35), (25, 25, 40), (30, 25, 35), (15, 20, 30), (25, 20, 35),
+    (22, 22, 38), (18, 25, 35), (28, 22, 35),
 ]
 
 ANIMATIONS = [
-    "glitch", "neon_flicker", "matrix_rain", "particle_burst",
-    "circular_reveal", "spiral_in", "zoom_blur", "wave_distort",
-    "scanline", "cyber_glitch", "hologram", "vhs_track",
-    "neon_pulse", "laser_grid", "energy_wave", "chromatic_shift"
+    "fade_up", "fade_down", "fade_in", "slide_left", "slide_right",
+    "slide_up", "slide_down", "scale_in", "scale_out",
+    "zoom_in", "zoom_out", "rotate_in", "spiral_in",
+    "bounce_in", "elastic_in", "back_in", "circular_in",
+    "flip_x", "flip_y", "roll_in", "blur_in",
+    "wipe_left", "wipe_right", "wipe_up", "wipe_down",
+    "mask_circle", "mask_square", "clip_left", "clip_right",
+    "expand_out", "contract_in", "falling", "rising",
+    "wave_left", "wave_right", "wave_up", "wave_down",
+    "shimmer", "flash", "pop_in", "squeeze",
+    "stretch_x", "stretch_y", "shear_left", "shear_right",
+    "random_fade", "random_slide", "sequence_fade", "cascade",
+    "stagger_up", "stagger_down", "alternating", "snake"
 ]
 
 def parse_time(time_str):
@@ -118,99 +126,190 @@ def get_audio_duration(audio_file):
 
 def get_word_animation_offset(anim, word_progress, word_idx):
     pp = max(0, min(1, word_progress))
-    idx_offset = word_idx * 0.3
+    delay = word_idx * 0.08
+    delayed_pp = max(0, min(1, pp * 1.5 - delay))
+    ease = delayed_pp * (2 - delayed_pp)
     
-    if anim == "glitch":
-        offset_x = int(5 * math.sin(pp * 20 + word_idx)) if pp < 0.8 else 0
-        offset_y = int(3 * math.cos(pp * 15)) if pp < 0.8 else 0
-        return offset_x, offset_y
-    
-    elif anim == "neon_flicker":
-        flicker = math.sin(pp * 30) * 5 if random.random() > 0.1 else 0
-        return 0, flicker
-    
-    elif anim == "matrix_rain":
-        trail = int(40 * (1 - pp)) * (word_idx % 3 + 1) // 3
-        return 0, trail
-    
-    elif anim == "particle_burst":
-        angle = (word_idx * 137.5) * math.pi / 180
-        dist = 30 * pp * (1 - pp) * 4
-        return int(math.cos(angle) * dist), int(math.sin(angle) * dist)
-    
-    elif anim == "circular_reveal":
-        radius = 200 * pp
-        angle = word_idx * 0.5 + pp * math.pi * 2
-        return int(radius * math.cos(angle) * 0.1), int(radius * math.sin(angle) * 0.1)
-    
+    if anim == "fade_up":
+        return 0, int(-20 * (1 - ease))
+    elif anim == "fade_down":
+        return 0, int(20 * (1 - ease))
+    elif anim == "fade_in":
+        return 0, 0
+    elif anim == "slide_left":
+        return int(-30 * (1 - ease)), 0
+    elif anim == "slide_right":
+        return int(30 * (1 - ease)), 0
+    elif anim == "slide_up":
+        return 0, int(-25 * (1 - ease))
+    elif anim == "slide_down":
+        return 0, int(25 * (1 - ease))
+    elif anim == "scale_in":
+        return 0, 0
+    elif anim == "scale_out":
+        return 0, 0
+    elif anim == "zoom_in":
+        return 0, 0
+    elif anim == "zoom_out":
+        return 0, 0
+    elif anim == "rotate_in":
+        return 0, 0
     elif anim == "spiral_in":
-        angle = pp * math.pi * 4 + word_idx * 0.8
-        dist = 80 * (1 - pp)
-        return int(math.cos(angle) * dist), int(math.sin(angle) * dist)
-    
-    elif anim == "zoom_blur":
-        return 0, int(-10 * (1 + (1 - pp) * 2 - 1))
-    
-    elif anim == "wave_distort":
-        return int(20 * math.sin(pp * math.pi * 3 + idx_offset)), int(-15 * math.sin(pp * math.pi * 2 + idx_offset))
-    
-    elif anim == "scanline":
-        scan_y = int(HEIGHT * pp)
-        offset = abs(word_idx * 10 - scan_y) if abs(word_idx * 10 - scan_y) < 30 else 30
-        return 0, int((30 - offset) * math.sin(pp * math.pi))
-    
-    elif anim == "cyber_glitch":
-        glitch = int(8 * math.sin(pp * 50)) if random.random() > 0.7 else 0
-        shift = int(15 * (1 - pp)) if pp < 0.5 else 0
-        return shift + glitch, glitch
-    
-    elif anim == "hologram":
-        shimmer = int(5 * math.sin(pp * 20 + word_idx * 2))
-        return shimmer, int(3 * math.sin(pp * 15))
-    
-    elif anim == "vhs_track":
-        track_offset = int(2 * math.sin(pp * 10))
-        jitter = int(3 * random.random() - 1.5) if pp < 0.9 else 0
-        return track_offset + jitter, 0
-    
-    elif anim == "neon_pulse":
-        pulse = int(10 * math.sin(pp * math.pi * 4))
-        return 0, int(pulse - 5 * (1 - pp))
-    
-    elif anim == "laser_grid":
-        grid_offset = int(50 * math.sin(pp * math.pi + word_idx * 0.2))
-        return grid_offset, int(30 * math.cos(pp * math.pi))
-    
-    elif anim == "energy_wave":
-        wave = int(40 * math.sin(pp * math.pi * 2 + word_idx * 0.4))
-        return wave, int(-20 * math.cos(pp * math.pi))
-    
-    elif anim == "chromatic_shift":
-        shift = int(8 * (1 - pp) * math.sin(pp * math.pi))
-        return shift, 0
+        return 0, 0
+    elif anim == "bounce_in":
+        return 0, int(-10 * math.sin(delayed_pp * math.pi))
+    elif anim == "elastic_in":
+        return 0, int(-15 * (1 - ease))
+    elif anim == "back_in":
+        return 0, int(-15 * (1 - ease))
+    elif anim == "circular_in":
+        return 0, int(-10 * (1 - ease))
+    elif anim == "flip_x":
+        return 0, 0
+    elif anim == "flip_y":
+        return 0, 0
+    elif anim == "roll_in":
+        return int(20 * (1 - ease)), int(-15 * math.sin(delayed_pp * math.pi))
+    elif anim == "blur_in":
+        return 0, 0
+    elif anim == "wipe_left":
+        return int(-25 * (1 - ease)), 0
+    elif anim == "wipe_right":
+        return int(25 * (1 - ease)), 0
+    elif anim == "wipe_up":
+        return 0, int(-20 * (1 - ease))
+    elif anim == "wipe_down":
+        return 0, int(60 * (1 - ease))
+    elif anim == "mask_circle":
+        return 0, 0
+    elif anim == "mask_square":
+        return 0, 0
+    elif anim == "clip_left":
+        return int(-30 * (1 - ease)), 0
+    elif anim == "clip_right":
+        return int(30 * (1 - ease)), 0
+    elif anim == "expand_out":
+        return 0, 0
+    elif anim == "contract_in":
+        return 0, 0
+    elif anim == "falling":
+        return 0, int(-20 * (1 - ease))
+    elif anim == "rising":
+        return 0, int(20 * (1 - ease))
+    elif anim == "wave_left":
+        return int(-10 * math.sin(delayed_pp * math.pi)), 0
+    elif anim == "wave_right":
+        return int(10 * math.sin(delayed_pp * math.pi)), 0
+    elif anim == "wave_up":
+        return 0, int(-8 * math.sin(delayed_pp * math.pi))
+    elif anim == "wave_down":
+        return 0, int(8 * math.sin(delayed_pp * math.pi))
+    elif anim == "shimmer":
+        return int(2 * math.sin(delayed_pp * 20)), 0
+    elif anim == "flash":
+        return 0, 0
+    elif anim == "pop_in":
+        return 0, int(-8 * (1 - delayed_pp) * delayed_pp * 4)
+    elif anim == "squeeze":
+        return int(5 * (1 - delayed_pp)), 0
+    elif anim == "stretch_x":
+        return int(-8 * math.sin(delayed_pp * math.pi)), 0
+    elif anim == "stretch_y":
+        return 0, int(-8 * math.sin(delayed_pp * math.pi))
+    elif anim == "shear_left":
+        return int(-15 * delayed_pp * (1 - delayed_pp) * 4), 0
+    elif anim == "shear_right":
+        return int(15 * delayed_pp * (1 - delayed_pp) * 4), 0
+    elif anim == "random_fade":
+        return 0, int(-10 * (1 - ease))
+    elif anim == "random_slide":
+        dirs = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        dx, dy = dirs[word_idx % 4]
+        return int(dx * 20 * (1 - ease)), int(dy * 20 * (1 - ease))
+    elif anim == "sequence_fade":
+        return 0, int(-12 * (1 - ease))
+    elif anim == "cascade":
+        return 0, int(-10 * (1 - ease))
+    elif anim == "stagger_up":
+        return 0, int(-15 * (1 - ease))
+    elif anim == "stagger_down":
+        return 0, int(15 * (1 - ease))
+    elif anim == "alternating":
+        if word_idx % 2 == 0:
+            return int(-15 * (1 - ease)), 0
+        return int(15 * (1 - ease)), 0
+    elif anim == "snake":
+        wave = 8 * math.sin(delayed_pp * math.pi * 2 + word_idx * 0.3)
+        return int(wave), 0
     
     return 0, 0
 
-def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colors, bg, anim_type):
+BG_EFFECTS = ["subtle", "blur", "gradient", "soft", "minimal"]
+
+def draw_background_effects(draw, colors, progress, effect):
+    bg_color = hex_to_rgb(colors[0])
+    
+    if effect == "subtle":
+        alpha = int(3 + 2 * math.sin(progress * math.pi))
+        for x in range(0, WIDTH, 100):
+            draw.line([(x, 0), (x, HEIGHT)], fill=(*bg_color, alpha), width=1)
+        for y in range(0, HEIGHT, 100):
+            draw.line([(0, y), (WIDTH, y)], fill=(*bg_color, alpha), width=1)
+    
+    elif effect == "blur":
+        for i in range(20):
+            x = random.randint(0, WIDTH)
+            y = random.randint(0, HEIGHT)
+            r = random.randint(30, 80)
+            draw.ellipse([x - r, y - r, x + r, y + r], fill=(*bg_color, 3))
+    
+    elif effect == "gradient":
+        for y in range(0, HEIGHT, 20):
+            alpha = int(2 + 3 * math.sin((y / HEIGHT) * math.pi + progress * math.pi))
+            draw.line([(0, y), (WIDTH, y)], fill=(*bg_color, alpha))
+    
+    elif effect == "soft":
+        for i in range(8):
+            x = WIDTH // 8 * i + 40 + int(10 * math.sin(progress * math.pi * 2 + i))
+            y = HEIGHT // 2 + int(20 * math.cos(progress * math.pi + i))
+            r = 40 + int(15 * math.sin(progress * math.pi))
+            draw.ellipse([x - r, y - r, x + r, y + r], fill=(*bg_color, 4))
+    
+    elif effect == "minimal":
+        alpha = int(5 + 3 * math.sin(progress * math.pi))
+        for x in range(0, WIDTH, 120):
+            draw.line([(x, 0), (x, HEIGHT)], fill=(*bg_color, alpha), width=1)
+
+def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colors, bg, anim_type, bg_effect):
     img = Image.new("RGB", (WIDTH, HEIGHT), bg)
     draw = ImageDraw.Draw(img)
+    
+    progress = (frame_time - scene_start) / scene_duration
+    progress = max(0, min(1, progress))
+    
+    draw_background_effects(draw, colors, progress, bg_effect)
     
     font = get_font(48)
     progress = (frame_time - scene_start) / scene_duration
     progress = max(0, min(1, progress))
     
     word_count = len(words)
-    speed_factor = 1.5
+    speed_factor = 2.5
     adjusted_progress = min(1.0, progress * speed_factor)
     words_per_moment = int(word_count * adjusted_progress)
     if words_per_moment == 0 and progress > 0:
         words_per_moment = 1
-    visible_words = words[:words_per_moment]
     
-    max_width = WIDTH - 150
-    lines = wrap_words(visible_words, font, max_width, draw)
+    all_lines = wrap_words(words, font, WIDTH - 150, draw)
+    visible_count = min(words_per_moment, word_count)
     
-    line_h = 65
+    if visible_count > 0:
+        visible_words = words[:visible_count]
+        lines = wrap_words(visible_words, font, WIDTH - 150, draw)
+    else:
+        lines = []
+    
+    line_h = 60
     total_h = len(lines) * line_h
     start_y = (HEIGHT - total_h) // 2
     
@@ -222,67 +321,34 @@ def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colo
         
         for w_idx, word in enumerate(line):
             global_idx = sum(len(lines[i]) for i in range(line_idx)) + w_idx
-            word_progress = 1.0 if global_idx < words_per_moment - 1 else (adjusted_progress * word_count - global_idx)
-            word_progress = max(0, min(1, word_progress * 2))
+            word_delay = global_idx * 0.04
+            word_progress = max(0, min(1, (adjusted_progress - word_delay) * 4))
+            
+            if global_idx >= words_per_moment:
+                continue
             
             ox, oy = get_word_animation_offset(anim_type, word_progress, global_idx)
             
             color = colors[global_idx % len(colors)]
             rgb = hex_to_rgb(color)
             
-            if anim_type in ["neon_flicker", "neon_pulse", "hologram", "energy_wave"]:
-                glow_size = int(3 + 3 * math.sin(word_progress * math.pi))
-                for gs in range(glow_size, 0, -1):
-                    lighter = tuple(min(255, c + 30) for c in rgb)
-                    for dx in range(-1, 2):
-                        for dy in range(-1, 2):
-                            if dx != 0 or dy != 0:
-                                draw.text((x + ox + dx * gs, y + oy + dy * gs), word, fill=lighter, font=font)
+            if anim_type in ["shimmer", "flash"]:
+                lighter = tuple(min(255, c + 50) for c in rgb)
+                draw.text((x + ox - 1, y + oy), word, fill=lighter, font=font)
+                draw.text((x + ox + 1, y + oy), word, fill=lighter, font=font)
             
             draw.text((x + ox, y + oy), word, fill=rgb, font=font)
             x += draw.textbbox((0, 0), word, font=font)[2] + 12
     
-    base_particles = 20
-    if anim_type in ["glitch", "cyber_glitch", "vhs_track"]:
-        base_particles = 40
-        for _ in range(15):
-            px = random.randint(0, WIDTH)
-            py = random.randint(0, HEIGHT)
-            r = random.randint(1, 3)
-            draw.rectangle([px, py, px+r, py+random.randint(5, 20)], fill=hex_to_rgb(random.choice(colors)))
-    elif anim_type in ["matrix_rain"]:
-        for x in range(0, WIDTH, 30):
-            y = int((frame_time * 100 + x) % HEIGHT)
-            draw.text((x, y), random.choice(["0", "1", "1", "0"]), fill=(0, 255, 0), font=get_font(12))
-    elif anim_type in ["laser_grid", "energy_wave"]:
-        for i in range(0, WIDTH, 40):
-            draw.line([(i, 0), (i, HEIGHT)], fill=(*hex_to_rgb(colors[0]), 50))
-        for i in range(0, HEIGHT, 40):
-            draw.line([(0, i), (WIDTH, i)], fill=(*hex_to_rgb(colors[0]), 50))
-    elif anim_type in ["neon_flicker", "neon_pulse", "hologram"]:
-        for _ in range(10):
-            x1, y1 = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-            x2, y2 = random.randint(0, WIDTH), random.randint(0, HEIGHT)
-            draw.line([(x1, y1), (x2, y2)], fill=hex_to_rgb(random.choice(colors)), width=2)
-    
-    for _ in range(base_particles):
-        px = random.randint(0, WIDTH)
-        py = random.randint(0, HEIGHT)
-        r = random.randint(2, 5)
-        color = random.choice(colors)
-        alpha = int(100 + 100 * math.sin(progress * math.pi))
-        draw.ellipse([px, py, px+r*2, py+r*2], fill=hex_to_rgb(color))
-    
-    if anim_type in ["scanline"]:
-        for y in range(0, HEIGHT, 4):
-            draw.line([(0, y), (WIDTH, y)], fill=(0, 0, 0, 30))
-    
     img.save(output_path, "PNG")
 
-def main():
+def main(vtt_path=None):
     output_dir = os.path.join(SCRIPT_DIR, "output")
     scenes_dir = os.path.join(SCRIPT_DIR, "scenes")
-    source_vtt = os.path.join(SCRIPT_DIR, "source.vtt")
+    if vtt_path is None:
+        source_vtt = os.path.join(SCRIPT_DIR, "source.vtt")
+    else:
+        source_vtt = vtt_path
     
     for folder in [output_dir, scenes_dir]:
         os.makedirs(folder, exist_ok=True)
@@ -295,6 +361,7 @@ def main():
                 os.remove(path)
     
     print("Reading source subtitles...")
+    print(f"Source: {source_vtt}")
     subtitles = parse_vtt(source_vtt)
     print(f"Found {len(subtitles)} subtitles")
     
@@ -321,15 +388,16 @@ def main():
         bg = random.choice(BG_COLORS)
         colors = random.sample(NEON_COLORS, 3)
         anim = random.choice(ANIMATIONS)
+        bg_effect = random.choice(BG_EFFECTS)
         
         num_frames = int(scene_duration * FPS)
-        print(f"  Generating {num_frames} frames with {anim} animation...")
+        print(f"  Generating {num_frames} frames with {anim} animation and {bg_effect} background...")
         
         for frame_num in range(num_frames):
             frame_time = frame_num / FPS
             frame_path = os.path.join(scene_frames_dir, f"frame_{frame_num:05d}.png")
             draw_frame(sub["words"], frame_time, 0, scene_duration, 
-                      frame_path, colors, bg, anim)
+                      frame_path, colors, bg, anim, bg_effect)
         
         print(f"  Creating scene video...")
         result = subprocess.run([
@@ -372,4 +440,6 @@ def main():
         print(f"Error: {result.stderr[-300:]}")
 
 if __name__ == "__main__":
-    main()
+    import sys
+    vtt_arg = sys.argv[1] if len(sys.argv) > 1 else None
+    main(vtt_arg)
