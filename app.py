@@ -17,37 +17,31 @@ DEFAULT_VTT_CONTENT = """WEBVTT
 What is an API
 
 #PARAGRAPH
-An API stands for Application Programming Interface. It allows software to communicate.
+An API lets apps talk to each other.
 
 #HEADING
 How APIs Work
 
 #PARAGRAPH
-When you use an app, it sends a request through an API to another service.
+Apps send requests through APIs to servers.
 
 #HEADING
 REST APIs
 
 #PARAGRAPH
-REST APIs use HTTP methods like GET, POST, PUT, and DELETE for operations.
+REST APIs use GET, POST, PUT, DELETE methods.
 
 #HEADING
 API Security
 
 #PARAGRAPH
-Authentication and API keys help secure access to services and protect data.
+API keys and auth protect your data.
 
 #HEADING
 JSON Format
 
 #PARAGRAPH
-JSON is the common data format for APIs, easy to read and widely used.
-
-#HEADING
-Popular APIs
-
-#PARAGRAPH
-Google Maps, Twitter, and Stripe APIs power many modern applications today."""
+JSON is the common data format for APIs."""
 
 progress_queue = queue.Queue()
 generation_done = False
