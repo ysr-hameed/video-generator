@@ -29,9 +29,10 @@ BG_COLORS = [
 ]
 
 ANIMATIONS = [
-    "slide_up", "slide_down", "slide_left", "slide_right",
-    "bounce", "wave", "pulse", "elastic",
-    "fade_in", "pop", "float", "drop"
+    "glitch", "neon_flicker", "matrix_rain", "particle_burst",
+    "circular_reveal", "spiral_in", "zoom_blur", "wave_distort",
+    "scanline", "cyber_glitch", "hologram", "vhs_track",
+    "neon_pulse", "laser_grid", "energy_wave", "chromatic_shift"
 ]
 
 def parse_time(time_str):
@@ -116,31 +117,78 @@ def get_audio_duration(audio_file):
     return float(json.loads(result.stdout)["format"]["duration"])
 
 def get_word_animation_offset(anim, word_progress, word_idx):
-    if anim == "slide_up":
-        return 0, int(60 * (1 - word_progress))
-    elif anim == "slide_down":
-        return 0, int(-60 * (1 - word_progress))
-    elif anim == "slide_left":
-        return int(100 * (1 - word_progress)), 0
-    elif anim == "slide_right":
-        return int(-100 * (1 - word_progress)), 0
-    elif anim == "bounce":
-        return 0, int(-30 * abs(math.sin(word_progress * math.pi)))
-    elif anim == "wave":
-        return 0, int(-25 * math.sin(word_progress * math.pi * 2 + word_idx * 0.5))
-    elif anim == "pulse":
-        return 0, int(-10 * math.sin(word_progress * math.pi * 3))
-    elif anim == "elastic":
-        e = 1 - math.pow(2, -10 * word_progress) * math.cos(word_progress * math.pi * 3)
-        return 0, int(-40 * (1 - e))
-    elif anim == "float":
-        return 0, int(-20 * math.sin(word_progress * math.pi * 2))
-    elif anim == "drop":
-        if word_progress < 0.3:
-            return 0, int(-100 * (1 - word_progress / 0.3))
-        else:
-            bounce = int(15 * math.sin((word_progress - 0.3) * math.pi * 5))
-            return 0, bounce
+    pp = max(0, min(1, word_progress))
+    idx_offset = word_idx * 0.3
+    
+    if anim == "glitch":
+        offset_x = int(5 * math.sin(pp * 20 + word_idx)) if pp < 0.8 else 0
+        offset_y = int(3 * math.cos(pp * 15)) if pp < 0.8 else 0
+        return offset_x, offset_y
+    
+    elif anim == "neon_flicker":
+        flicker = math.sin(pp * 30) * 5 if random.random() > 0.1 else 0
+        return 0, flicker
+    
+    elif anim == "matrix_rain":
+        trail = int(40 * (1 - pp)) * (word_idx % 3 + 1) // 3
+        return 0, trail
+    
+    elif anim == "particle_burst":
+        angle = (word_idx * 137.5) * math.pi / 180
+        dist = 30 * pp * (1 - pp) * 4
+        return int(math.cos(angle) * dist), int(math.sin(angle) * dist)
+    
+    elif anim == "circular_reveal":
+        radius = 200 * pp
+        angle = word_idx * 0.5 + pp * math.pi * 2
+        return int(radius * math.cos(angle) * 0.1), int(radius * math.sin(angle) * 0.1)
+    
+    elif anim == "spiral_in":
+        angle = pp * math.pi * 4 + word_idx * 0.8
+        dist = 80 * (1 - pp)
+        return int(math.cos(angle) * dist), int(math.sin(angle) * dist)
+    
+    elif anim == "zoom_blur":
+        return 0, int(-10 * (1 + (1 - pp) * 2 - 1))
+    
+    elif anim == "wave_distort":
+        return int(20 * math.sin(pp * math.pi * 3 + idx_offset)), int(-15 * math.sin(pp * math.pi * 2 + idx_offset))
+    
+    elif anim == "scanline":
+        scan_y = int(HEIGHT * pp)
+        offset = abs(word_idx * 10 - scan_y) if abs(word_idx * 10 - scan_y) < 30 else 30
+        return 0, int((30 - offset) * math.sin(pp * math.pi))
+    
+    elif anim == "cyber_glitch":
+        glitch = int(8 * math.sin(pp * 50)) if random.random() > 0.7 else 0
+        shift = int(15 * (1 - pp)) if pp < 0.5 else 0
+        return shift + glitch, glitch
+    
+    elif anim == "hologram":
+        shimmer = int(5 * math.sin(pp * 20 + word_idx * 2))
+        return shimmer, int(3 * math.sin(pp * 15))
+    
+    elif anim == "vhs_track":
+        track_offset = int(2 * math.sin(pp * 10))
+        jitter = int(3 * random.random() - 1.5) if pp < 0.9 else 0
+        return track_offset + jitter, 0
+    
+    elif anim == "neon_pulse":
+        pulse = int(10 * math.sin(pp * math.pi * 4))
+        return 0, int(pulse - 5 * (1 - pp))
+    
+    elif anim == "laser_grid":
+        grid_offset = int(50 * math.sin(pp * math.pi + word_idx * 0.2))
+        return grid_offset, int(30 * math.cos(pp * math.pi))
+    
+    elif anim == "energy_wave":
+        wave = int(40 * math.sin(pp * math.pi * 2 + word_idx * 0.4))
+        return wave, int(-20 * math.cos(pp * math.pi))
+    
+    elif anim == "chromatic_shift":
+        shift = int(8 * (1 - pp) * math.sin(pp * math.pi))
+        return shift, 0
+    
     return 0, 0
 
 def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colors, bg, anim_type):
@@ -152,7 +200,9 @@ def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colo
     progress = max(0, min(1, progress))
     
     word_count = len(words)
-    words_per_moment = int(word_count * progress)
+    speed_factor = 1.5
+    adjusted_progress = min(1.0, progress * speed_factor)
+    words_per_moment = int(word_count * adjusted_progress)
     if words_per_moment == 0 and progress > 0:
         words_per_moment = 1
     visible_words = words[:words_per_moment]
@@ -172,33 +222,69 @@ def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colo
         
         for w_idx, word in enumerate(line):
             global_idx = sum(len(lines[i]) for i in range(line_idx)) + w_idx
-            word_progress = 1.0 if global_idx < words_per_moment - 1 else (progress * word_count - global_idx)
+            word_progress = 1.0 if global_idx < words_per_moment - 1 else (adjusted_progress * word_count - global_idx)
             word_progress = max(0, min(1, word_progress * 2))
             
             ox, oy = get_word_animation_offset(anim_type, word_progress, global_idx)
             
             color = colors[global_idx % len(colors)]
             rgb = hex_to_rgb(color)
+            
+            if anim_type in ["neon_flicker", "neon_pulse", "hologram", "energy_wave"]:
+                glow_size = int(3 + 3 * math.sin(word_progress * math.pi))
+                for gs in range(glow_size, 0, -1):
+                    lighter = tuple(min(255, c + 30) for c in rgb)
+                    for dx in range(-1, 2):
+                        for dy in range(-1, 2):
+                            if dx != 0 or dy != 0:
+                                draw.text((x + ox + dx * gs, y + oy + dy * gs), word, fill=lighter, font=font)
+            
             draw.text((x + ox, y + oy), word, fill=rgb, font=font)
             x += draw.textbbox((0, 0), word, font=font)[2] + 12
     
-    for _ in range(25):
+    base_particles = 20
+    if anim_type in ["glitch", "cyber_glitch", "vhs_track"]:
+        base_particles = 40
+        for _ in range(15):
+            px = random.randint(0, WIDTH)
+            py = random.randint(0, HEIGHT)
+            r = random.randint(1, 3)
+            draw.rectangle([px, py, px+r, py+random.randint(5, 20)], fill=hex_to_rgb(random.choice(colors)))
+    elif anim_type in ["matrix_rain"]:
+        for x in range(0, WIDTH, 30):
+            y = int((frame_time * 100 + x) % HEIGHT)
+            draw.text((x, y), random.choice(["0", "1", "1", "0"]), fill=(0, 255, 0), font=get_font(12))
+    elif anim_type in ["laser_grid", "energy_wave"]:
+        for i in range(0, WIDTH, 40):
+            draw.line([(i, 0), (i, HEIGHT)], fill=(*hex_to_rgb(colors[0]), 50))
+        for i in range(0, HEIGHT, 40):
+            draw.line([(0, i), (WIDTH, i)], fill=(*hex_to_rgb(colors[0]), 50))
+    elif anim_type in ["neon_flicker", "neon_pulse", "hologram"]:
+        for _ in range(10):
+            x1, y1 = random.randint(0, WIDTH), random.randint(0, HEIGHT)
+            x2, y2 = random.randint(0, WIDTH), random.randint(0, HEIGHT)
+            draw.line([(x1, y1), (x2, y2)], fill=hex_to_rgb(random.choice(colors)), width=2)
+    
+    for _ in range(base_particles):
         px = random.randint(0, WIDTH)
         py = random.randint(0, HEIGHT)
-        r = random.randint(2, 4)
+        r = random.randint(2, 5)
         color = random.choice(colors)
+        alpha = int(100 + 100 * math.sin(progress * math.pi))
         draw.ellipse([px, py, px+r*2, py+r*2], fill=hex_to_rgb(color))
+    
+    if anim_type in ["scanline"]:
+        for y in range(0, HEIGHT, 4):
+            draw.line([(0, y), (WIDTH, y)], fill=(0, 0, 0, 30))
     
     img.save(output_path, "PNG")
 
 def main():
-    audio_dir = os.path.join(SCRIPT_DIR, "audio")
-    frames_dir = os.path.join(SCRIPT_DIR, "frames")
     output_dir = os.path.join(SCRIPT_DIR, "output")
     scenes_dir = os.path.join(SCRIPT_DIR, "scenes")
     source_vtt = os.path.join(SCRIPT_DIR, "source.vtt")
     
-    for folder in [audio_dir, frames_dir, output_dir, scenes_dir]:
+    for folder in [output_dir, scenes_dir]:
         os.makedirs(folder, exist_ok=True)
         for file in os.listdir(folder):
             path = os.path.join(folder, file)
