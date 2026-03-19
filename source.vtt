@@ -1,97 +1,31 @@
 WEBVTT
 
-1
-00:00:00.000 --> 00:00:03.000
-What is an API and How It Works
+#HEADING
+What is an API
 
-2
-00:00:03.000 --> 00:00:06.000
-An API stands for Application Programming Interface
+#PARAGRAPH
+An API lets apps talk to each other.
 
-3
-00:00:06.000 --> 00:00:09.000
-It is a set of rules for software to communicate
+#HEADING
+How APIs Work
 
-4
-00:00:09.000 --> 00:00:12.000
-APIs allow different applications to talk to each other
+#PARAGRAPH
+Apps send requests through APIs to servers.
 
-5
-00:00:12.000 --> 00:00:15.000
-When you use an app, the app uses an API
+#HEADING
+REST APIs
 
-6
-00:00:15.000 --> 00:00:18.000
-The app sends a request through the API
+#PARAGRAPH
+REST APIs use GET, POST, PUT, DELETE methods.
 
-7
-00:00:18.000 --> 00:00:21.000
-The server processes the request and responds
+#HEADING
+API Security
 
-8
-00:00:21.000 --> 00:00:24.000
-REST APIs are the most popular type today
+#PARAGRAPH
+API keys and auth protect your data.
 
-9
-00:00:24.000 --> 00:00:27.000
-They use standard HTTP methods for operations
+#HEADING
+JSON Format
 
-10
-00:00:27.000 --> 00:00:30.000
-GET method retrieves data from the server
-
-11
-00:00:30.000 --> 00:00:33.000
-POST method creates new data on the server
-
-12
-00:00:33.000 --> 00:00:36.000
-PUT method updates existing data on the server
-
-13
-00:00:36.000 --> 00:00:39.000
-DELETE method removes data from the server
-
-14
-00:00:39.000 --> 00:00:42.000
-Authentication is required for secure API access
-
-15
-00:00:42.000 --> 00:00:45.000
-An API key identifies the user making requests
-
-16
-00:00:45.000 --> 00:00:48.000
-Rate limiting prevents too many requests at once
-
-17
-00:00:48.000 --> 00:00:51.000
-JSON is the most common data format for APIs
-
-18
-00:00:51.000 --> 00:00:54.000
-JSON is easy to read and widely supported
-
-19
-00:00:54.000 --> 00:00:57.000
-Google Maps API powers many map applications
-
-20
-00:00:57.000 --> 00:01:00.000
-Twitter API allows posting and reading tweets
-
-21
-00:01:00.000 --> 00:01:03.000
-Stripe API handles payment processing securely
-
-22
-00:01:03.000 --> 00:01:06.000
-Weather APIs provide forecast data to apps
-
-23
-00:01:06.000 --> 00:01:09.000
-APIs are essential for modern software development
-
-24
-00:01:09.000 --> 00:01:12.000
-They enable applications to work together seamlessly
+#PARAGRAPH
+JSON is the common data format for APIs.
