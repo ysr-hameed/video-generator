@@ -1,0 +1,13 @@
+__pycache__
+*.pyc
+*.pyo
+*.egg-info
+.git
+.gitignore
+*.md
+scenes
+output
+test_animations
+.dockerignore
+Dockerfile
+docker-compose.yml

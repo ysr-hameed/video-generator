@@ -1,4 +1,5 @@
 import os
+import gc
 import math
 import random
 import subprocess
@@ -7,18 +8,30 @@ import edge_tts
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from multiprocessing import Pool, cpu_count
 
-WIDTH = 1920
-HEIGHT = 1080
+SCALE = float(os.environ.get("VIDEO_SCALE", "1.0"))
+LOW_MEMORY = os.environ.get("LOW_MEMORY", "false").lower() == "true"
+
+WIDTH = int(1920 * SCALE)
+HEIGHT = int(1080 * SCALE)
 FPS = 30
 TTS_SPEED = 1.0
-NUM_WORKERS = max(1, cpu_count() - 1)
+
+if LOW_MEMORY:
+    NUM_WORKERS = 1
+    JPEG_QUALITY = 70
+else:
+    cpu = cpu_count()
+    NUM_WORKERS = min(2, max(1, cpu - 1))
 
 def _render_frame(args):
     frame_num, scene_frames_dir, frame_data = args
     scene_duration, words, colors, bg, anim_type, bg_effect, sub_type, primary_color, use_glass, text_palette, current_heading = frame_data
     frame_time = frame_num / FPS
     frame_path = os.path.join(scene_frames_dir, f"frame_{frame_num:05d}.jpg")
-    _draw_single_frame(frame_num, frame_time, scene_duration, frame_path, words, colors, bg, anim_type, bg_effect, sub_type, primary_color, use_glass, text_palette, current_heading)
+    try:
+        _draw_single_frame(frame_num, frame_time, scene_duration, frame_path, words, colors, bg, anim_type, bg_effect, sub_type, primary_color, use_glass, text_palette, current_heading)
+    finally:
+        gc.collect()
     return frame_num
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -427,7 +440,10 @@ def _draw_single_frame(frame_num, frame_time, scene_duration, output_path, words
                 draw.text((x + ox, y + oy), word, fill=rgb, font=font)
                 x += draw.textbbox((0, 0), word, font=font)[2] + 18
     
-    img.save(output_path, "JPEG", quality=85)
+    quality = 70 if LOW_MEMORY else 85
+    img.save(output_path, "JPEG", quality=quality, optimize=True)
+    del img, draw
+    gc.collect()
 
 def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colors, bg, anim_type, bg_effect, sub_type='PARAGRAPH', frame_num=0, primary_color="#FFFFFF", use_glass=False, text_palette=None):
     img = Image.new("RGB", (WIDTH, HEIGHT), bg)
@@ -688,6 +704,11 @@ def main(vtt_path=None):
             scene_videos.append(scene_video)
         else:
             print(f"  Error: {result.stderr[-200:]}")
+        
+        for file in os.listdir(scene_frames_dir):
+            os.remove(os.path.join(scene_frames_dir, file))
+        os.rmdir(scene_frames_dir)
+        gc.collect()
         print()
     
     print("=== Combining all scenes ===")
@@ -780,6 +801,10 @@ def test_animations():
             scene_videos.append(scene_video)
             print(f"  Done: {len(scene_videos)} scenes")
         
+        for file in os.listdir(scene_frames_dir):
+            os.remove(os.path.join(scene_frames_dir, file))
+        os.rmdir(scene_frames_dir)
+        gc.collect()
         test_count += 1
     
     print("\n=== Creating test video ===")

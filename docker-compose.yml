@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  video-generator:
+    build: .
+    image: video-generator:latest
+    container_name: video-generator
+    environment:
+      - LOW_MEMORY=true
+      - VIDEO_SCALE=0.5
+    volumes:
+      - ./source.vtt:/app/source.vtt:ro
+      - ./output:/app/output
+      - ./scenes:/app/scenes
+    mem_limit: 512m
+    memswap_limit: 1g
+    cpus: 1
+    restart: unless-stopped
