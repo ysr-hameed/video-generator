@@ -143,7 +143,17 @@ def parse_vtt(file_path):
             line = lines[i].strip()
             
             if line.startswith('#'):
-                sub_type = 'HEADING' if 'HEADING' in line.upper() else 'PARAGRAPH'
+                line_upper = line.upper()
+                if 'HEADING' in line_upper:
+                    sub_type = 'HEADING'
+                elif 'LIST' in line_upper:
+                    sub_type = 'LIST'
+                elif 'CARD' in line_upper:
+                    sub_type = 'CARD'
+                elif 'CODE' in line_upper or 'PRE' in line_upper:
+                    sub_type = 'CODE'
+                else:
+                    sub_type = 'PARAGRAPH'
                 i += 1
                 text_lines = []
                 while i < len(lines) and lines[i].strip() and not lines[i].strip().startswith('#'):
@@ -358,6 +368,291 @@ def _draw_single_frame(frame_num, frame_time, scene_duration, output_path, words
             draw.text((x + 3, y + 3), visible_text, fill=(0, 0, 0), font=heading_font)
             draw.text((x, y), visible_text, fill=p_color, font=heading_font)
     
+    elif sub_type == 'CARD' and len(words) > 0:
+        if current_heading and current_heading.get("text"):
+            h_color = hex_to_rgb(current_heading.get("color", "#FFFFFF"))
+            h_font = get_font(HEADING_END_SIZE)
+            h_x, h_y = HEADING_END_X, HEADING_END_Y
+            draw.text((h_x + 3, h_y + 3), current_heading["text"], fill=(0, 0, 0), font=h_font)
+            draw.text((h_x, h_y), current_heading["text"], fill=h_color, font=h_font)
+        
+        word_reveal = min(1.0, progress * 2.5)
+        visible_count = max(1, int(len(words) * word_reveal))
+        visible_words = words[:visible_count]
+        
+        card_padding_x = 120
+        card_padding_y = 80
+        card_margin = 80
+        card_max_width = WIDTH - card_margin * 2
+        card_max_height = HEIGHT - 350
+        
+        min_font = 28
+        max_font = 56
+        font_size = max_font
+        
+        font = get_font(font_size)
+        lines = wrap_words(visible_words, font, card_max_width - card_padding_x * 2, draw)
+        
+        line_h = int(font_size * 1.4)
+        total_h = len(lines) * line_h
+        total_w = 0
+        for line in lines:
+            lw = sum(draw.textbbox((0, 0), w, font=font)[2] for w in line)
+            lw += (len(line) - 1) * 10
+            total_w = max(total_w, lw)
+        
+        while (total_h > card_max_height - card_padding_y * 2 or total_w > card_max_width - card_padding_x * 2) and font_size > min_font:
+            font_size -= 3
+            font = get_font(font_size)
+            lines = wrap_words(visible_words, font, card_max_width - card_padding_x * 2, draw)
+            line_h = int(font_size * 1.4)
+            total_h = len(lines) * line_h
+            total_w = 0
+            for line in lines:
+                lw = sum(draw.textbbox((0, 0), w, font=font)[2] for w in line)
+                lw += (len(line) - 1) * 10
+                total_w = max(total_w, lw)
+        
+        card_width = min(total_w + card_padding_x * 2, card_max_width)
+        card_height = min(total_h + card_padding_y * 2, card_max_height)
+        
+        ease = ease_out(word_reveal)
+        
+        scale = 0.8 + 0.2 * ease
+        cx, cy = WIDTH // 2, HEIGHT // 2
+        sw, sh = int(card_width * scale), int(card_height * scale)
+        sx, sy = cx - sw // 2, cy - sh // 2
+        
+        card_overlay = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(card_overlay)
+        
+        for i in range(8):
+            offset = 6 - i
+            alpha = int(12 * (1 - i * 0.1) * ease)
+            if alpha > 0:
+                cd.rounded_rectangle([sx - offset, sy - offset, sx + sw + offset, sy + sh + offset], 
+                                    radius=28, fill=(p_color[0] // 4, p_color[1] // 4, p_color[2] // 4, alpha))
+        
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=28, 
+                            fill=(25, 27, 40, int(240 * ease)))
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sy + 8], radius=28, 
+                            fill=(p_color[0] // 5, p_color[1] // 5, p_color[2] // 5, int(100 * ease)))
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=28, 
+                            outline=(p_color[0], p_color[1], p_color[2], int(100 * ease)), width=3)
+        
+        dot_r = 6
+        cd.ellipse([sx + 28 - dot_r, sy + 24 - dot_r, sx + 28 + dot_r, sy + 24 + dot_r], 
+                  fill=(255, 95, 86, int(255 * ease)))
+        cd.ellipse([sx + 52 - dot_r, sy + 24 - dot_r, sx + 52 + dot_r, sy + 24 + dot_r], 
+                  fill=(255, 189, 46, int(255 * ease)))
+        cd.ellipse([sx + 76 - dot_r, sy + 24 - dot_r, sx + 76 + dot_r, sy + 24 + dot_r], 
+                  fill=(40, 201, 64, int(255 * ease)))
+        
+        img = Image.alpha_composite(img.convert('RGBA'), card_overlay).convert('RGB')
+        draw = ImageDraw.Draw(img)
+        
+        content_top = sy + 50
+        start_y = content_top + (sh - 50 - total_h) // 2
+        
+        for line_idx, line in enumerate(lines):
+            line_text = ' '.join(line)
+            lw = sum(draw.textbbox((0, 0), w, font=font)[2] for w in line)
+            lw += (len(line) - 1) * 10
+            lx = sx + (sw - lw) // 2
+            ly = start_y + line_idx * line_h
+            
+            rgb = hex_to_rgb(text_palette[line_idx % len(text_palette)]) if text_palette else p_color
+            
+            draw.text((lx + 2, ly + 2), line_text, fill=(10, 10, 20), font=font)
+            draw.text((lx, ly), line_text, fill=rgb, font=font)
+    
+    elif sub_type == 'CODE' and len(words) > 0:
+        if current_heading and current_heading.get("text"):
+            h_color = hex_to_rgb(current_heading.get("color", "#FFFFFF"))
+            h_font = get_font(HEADING_END_SIZE)
+            h_x, h_y = HEADING_END_X, HEADING_END_Y
+            draw.text((h_x + 3, h_y + 3), current_heading["text"], fill=(0, 0, 0), font=h_font)
+            draw.text((h_x, h_y), current_heading["text"], fill=h_color, font=h_font)
+        
+        word_reveal = min(1.0, progress * 2.5)
+        visible_count = max(1, int(len(words) * word_reveal))
+        visible_words = words[:visible_count]
+        
+        code_padding_x = 60
+        code_padding_y = 50
+        code_margin = 60
+        code_max_width = WIDTH - code_margin * 2
+        code_max_height = HEIGHT - 250
+        
+        min_font = 22
+        max_font = 42
+        font_size = max_font
+        
+        code_font = get_font(font_size)
+        code_text = ' '.join(visible_words)
+        
+        lines = code_text.split()
+        line_h = int(font_size * 1.5)
+        
+        total_h = len(lines) * line_h
+        max_line_len = max(len(line) for line in lines) if lines else 1
+        total_w = draw.textbbox((0, 0), ' ' * max_line_len, font=code_font)[2]
+        
+        while (total_h > code_max_height - code_padding_y * 2 or total_w > code_max_width - code_padding_x * 2) and font_size > min_font:
+            font_size -= 2
+            code_font = get_font(font_size)
+            line_h = int(font_size * 1.5)
+            total_h = len(lines) * line_h
+            max_line_len = max(len(line) for line in lines) if lines else 1
+            total_w = draw.textbbox((0, 0), ' ' * max_line_len, font=code_font)[2]
+        
+        code_width = min(total_w + code_padding_x * 2, code_max_width)
+        code_height = min(total_h + code_padding_y * 2, code_max_height)
+        
+        ease = ease_out(word_reveal)
+        
+        scale = 0.85 + 0.15 * ease
+        cx, cy = WIDTH // 2, HEIGHT // 2
+        sw, sh = int(code_width * scale), int(code_height * scale)
+        sx, sy = cx - sw // 2, cy - sh // 2
+        
+        code_overlay = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(code_overlay)
+        
+        cd.rectangle([sx - 8, sy - 8, sx + sw + 8, sy + sh + 8], 
+                    fill=(0, 0, 0, int(30 * ease)))
+        
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=16, 
+                            fill=(20, 20, 32, int(250 * ease)))
+        
+        for i in range(5):
+            offset = 5 - i
+            alpha = int(20 * (1 - i * 0.15) * ease)
+            if alpha > 0:
+                cd.rounded_rectangle([sx - offset, sy - offset, sx + sw + offset, sy + sh + offset], 
+                                    radius=16 + offset, outline=(p_color[0] // 3, p_color[1] // 3, p_color[2] // 3, alpha), width=1)
+        
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=16, 
+                            outline=(p_color[0], p_color[1], p_color[2], int(60 * ease)), width=2)
+        
+        cd.rectangle([sx, sy, sx + sw, sy + 36], 
+                    fill=(p_color[0] // 6, p_color[1] // 6, p_color[2] // 6, int(150 * ease)))
+        cd.rectangle([sx, sy + 35, sx + sw, sy + 36], 
+                    fill=(p_color[0], p_color[1], p_color[2], int(40 * ease)))
+        
+        tab_r = 6
+        cd.ellipse([sx + 20 - tab_r, sy + 18 - tab_r, sx + 20 + tab_r, sy + 18 + tab_r], 
+                  fill=(255, 95, 86, int(255 * ease)))
+        cd.ellipse([sx + 40 - tab_r, sy + 18 - tab_r, sx + 40 + tab_r, sy + 18 + tab_r], 
+                  fill=(255, 189, 46, int(255 * ease)))
+        cd.ellipse([sx + 60 - tab_r, sy + 18 - tab_r, sx + 60 + tab_r, sy + 18 + tab_r], 
+                  fill=(40, 201, 64, int(255 * ease)))
+        
+        img = Image.alpha_composite(img.convert('RGBA'), code_overlay).convert('RGB')
+        draw = ImageDraw.Draw(img)
+        
+        start_y = sy + 50
+        
+        keywords = ['def', 'class', 'if', 'else', 'elif', 'for', 'while', 'return', 'import', 'from', 'try', 'except', 'with', 'as', 'async', 'await', 'True', 'False', 'None', 'and', 'or', 'not', 'in', 'is', 'print', 'function', 'const', 'let', 'var', 'export', 'default', 'new', 'this', 'typeof', 'instanceof']
+        string_chars = ['"', "'", '`']
+        
+        x_offset = sx + 30
+        y_pos = start_y
+        
+        for line_text in lines:
+            words_in_line = line_text.split()
+            x_pos = x_offset
+            
+            for word in words_in_line:
+                clean_word = word.strip('.,;:(){}[]<>=+-*/%!&|')
+                
+                if clean_word in keywords:
+                    color = hex_to_rgb("#FF79C6")
+                elif clean_word.startswith(('http', 'www')):
+                    color = hex_to_rgb("#8BE9FD")
+                elif clean_word.isdigit():
+                    color = hex_to_rgb("#BD93F9")
+                elif any(c in word for c in string_chars):
+                    color = hex_to_rgb("#F1FA8C")
+                elif clean_word in ['{', '}', '[', ']', '(', ')', ';', ':']:
+                    color = hex_to_rgb("#FFB86C")
+                elif '#' in word or '//' in word:
+                    color = hex_to_rgb("#6272A4")
+                else:
+                    color = hex_to_rgb("#F8F8F2")
+                
+                draw.text((x_pos + 1, y_pos + 1), word, fill=(15, 15, 25), font=code_font)
+                draw.text((x_pos, y_pos), word, fill=color, font=code_font)
+                
+                x_pos += draw.textbbox((0, 0), word, font=code_font)[2] + code_font.size // 4
+            
+            y_pos += line_h
+    
+    elif sub_type == 'LIST' and len(words) > 0:
+        if current_heading and current_heading.get("text"):
+            h_color = hex_to_rgb(current_heading.get("color", "#FFFFFF"))
+            h_font = get_font(HEADING_END_SIZE)
+            h_x, h_y = HEADING_END_X, HEADING_END_Y
+            draw.text((h_x + 3, h_y + 3), current_heading["text"], fill=(0, 0, 0), font=h_font)
+            draw.text((h_x, h_y), current_heading["text"], fill=h_color, font=h_font)
+        
+        word_reveal = min(1.0, progress * 2.5)
+        visible_count = max(1, int(len(words) * word_reveal))
+        visible_words = words[:visible_count]
+        
+        text_len = len(' '.join(visible_words))
+        if text_len < 20:
+            font_size = 120
+        elif text_len < 40:
+            font_size = 90
+        elif text_len < 60:
+            font_size = 72
+        else:
+            font_size = 64
+        
+        font = get_font(font_size)
+        
+        full_text = ' '.join(visible_words)
+        bbox = draw.textbbox((0, 0), full_text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = (WIDTH - text_width) // 2
+        y = (HEIGHT - text_height) // 2
+        
+        ease = ease_out(word_reveal)
+        
+        ox, oy = 0, 0
+        if anim_type == "fade_up":
+            oy = int(-40 * (1 - ease))
+        elif anim_type == "fade_down":
+            oy = int(40 * (1 - ease))
+        elif anim_type == "slide_left":
+            ox = int(-50 * (1 - ease))
+        elif anim_type == "slide_right":
+            ox = int(50 * (1 - ease))
+        elif anim_type == "bounce_in":
+            bounce = 1 + 0.2 * math.sin(ease * math.pi)
+            oy = int(-30 * (1 - ease) * bounce)
+        elif anim_type == "elastic_in":
+            elastic = ease * (2 - ease)
+            oy = int(-35 * (1 - elastic))
+        elif anim_type == "zoom_in":
+            scale = 0.5 + 0.5 * ease
+            font_size_scaled = int(font_size * scale)
+            if font_size_scaled > 10:
+                font = get_font(font_size_scaled)
+            else:
+                font = get_font(font_size)
+        elif anim_type == "pop_in":
+            pop = ease * (2 - ease)
+            oy = int(-25 * (1 - pop))
+        
+        rgb = hex_to_rgb(text_palette[0]) if text_palette else p_color
+        
+        draw.text((x + ox + 3, y + oy + 3), full_text, fill=(0, 0, 0), font=font)
+        draw.text((x + ox, y + oy), full_text, fill=rgb, font=font)
+    
     elif sub_type == 'PARAGRAPH' and len(words) > 0:
         if current_heading and current_heading.get("text"):
             h_color = hex_to_rgb(current_heading.get("color", "#FFFFFF"))
@@ -514,6 +809,270 @@ def draw_frame(words, frame_time, scene_start, scene_duration, output_path, colo
                     glow_draw = ImageDraw.Draw(img)
                     glow_draw.text((x - 1, y - 1), visible_text, fill=(p_color[0], p_color[1], p_color[2], glow_alpha), font=heading_font)
                     glow_draw.text((x + 1, y + 1), visible_text, fill=(p_color[0], p_color[1], p_color[2], glow_alpha), font=heading_font)
+    
+    elif sub_type == 'LIST' and len(words) > 0:
+        word_reveal = min(1.0, progress * 2.5)
+        visible_count = max(1, int(len(words) * word_reveal))
+        visible_words = words[:visible_count]
+        
+        text_len = len(' '.join(visible_words))
+        if text_len < 20:
+            font_size = 120
+        elif text_len < 40:
+            font_size = 90
+        elif text_len < 60:
+            font_size = 72
+        else:
+            font_size = 64
+        
+        font = get_font(font_size)
+        
+        full_text = ' '.join(visible_words)
+        bbox = draw.textbbox((0, 0), full_text, font=font)
+        text_width = bbox[2] - bbox[0]
+        text_height = bbox[3] - bbox[1]
+        
+        x = (WIDTH - text_width) // 2
+        y = (HEIGHT - text_height) // 2
+        
+        ease = ease_out(word_reveal)
+        
+        ox, oy = 0, 0
+        if anim_type == "fade_up":
+            oy = int(-40 * (1 - ease))
+        elif anim_type == "fade_down":
+            oy = int(40 * (1 - ease))
+        elif anim_type == "slide_left":
+            ox = int(-50 * (1 - ease))
+        elif anim_type == "slide_right":
+            ox = int(50 * (1 - ease))
+        elif anim_type == "bounce_in":
+            bounce = 1 + 0.2 * math.sin(ease * math.pi)
+            oy = int(-30 * (1 - ease) * bounce)
+        elif anim_type == "elastic_in":
+            elastic = ease * (2 - ease)
+            oy = int(-35 * (1 - elastic))
+        elif anim_type == "zoom_in":
+            scale = 0.5 + 0.5 * ease
+            font_size_scaled = int(font_size * scale)
+            if font_size_scaled > 10:
+                font = get_font(font_size_scaled)
+            else:
+                font = get_font(font_size)
+        elif anim_type == "pop_in":
+            pop = ease * (2 - ease)
+            oy = int(-25 * (1 - pop))
+        
+        rgb = hex_to_rgb(text_palette[0]) if text_palette else p_color
+        
+        draw.text((x + ox + 3, y + oy + 3), full_text, fill=(0, 0, 0), font=font)
+        draw.text((x + ox, y + oy), full_text, fill=rgb, font=font)
+    
+    elif sub_type == 'CARD' and len(words) > 0:
+        word_reveal = min(1.0, progress * 2.5)
+        visible_count = max(1, int(len(words) * word_reveal))
+        visible_words = words[:visible_count]
+        
+        card_padding_x = 120
+        card_padding_y = 80
+        card_margin = 80
+        card_max_width = WIDTH - card_margin * 2
+        card_max_height = HEIGHT - 350
+        
+        min_font = 28
+        max_font = 56
+        font_size = max_font
+        
+        font = get_font(font_size)
+        lines = wrap_words(visible_words, font, card_max_width - card_padding_x * 2, draw)
+        
+        line_h = int(font_size * 1.4)
+        total_h = len(lines) * line_h
+        total_w = 0
+        for line in lines:
+            lw = sum(draw.textbbox((0, 0), w, font=font)[2] for w in line)
+            lw += (len(line) - 1) * 10
+            total_w = max(total_w, lw)
+        
+        while (total_h > card_max_height - card_padding_y * 2 or total_w > card_max_width - card_padding_x * 2) and font_size > min_font:
+            font_size -= 3
+            font = get_font(font_size)
+            lines = wrap_words(visible_words, font, card_max_width - card_padding_x * 2, draw)
+            line_h = int(font_size * 1.4)
+            total_h = len(lines) * line_h
+            total_w = 0
+            for line in lines:
+                lw = sum(draw.textbbox((0, 0), w, font=font)[2] for w in line)
+                lw += (len(line) - 1) * 10
+                total_w = max(total_w, lw)
+        
+        card_width = min(total_w + card_padding_x * 2, card_max_width)
+        card_height = min(total_h + card_padding_y * 2, card_max_height)
+        
+        ease = ease_out(word_reveal)
+        
+        scale = 0.8 + 0.2 * ease
+        cx, cy = WIDTH // 2, HEIGHT // 2
+        sw, sh = int(card_width * scale), int(card_height * scale)
+        sx, sy = cx - sw // 2, cy - sh // 2
+        
+        card_overlay = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(card_overlay)
+        
+        for i in range(8):
+            offset = 6 - i
+            alpha = int(12 * (1 - i * 0.1) * ease)
+            if alpha > 0:
+                cd.rounded_rectangle([sx - offset, sy - offset, sx + sw + offset, sy + sh + offset], 
+                                    radius=28, fill=(p_color[0] // 4, p_color[1] // 4, p_color[2] // 4, alpha))
+        
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=28, 
+                            fill=(25, 27, 40, int(240 * ease)))
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sy + 8], radius=28, 
+                            fill=(p_color[0] // 5, p_color[1] // 5, p_color[2] // 5, int(100 * ease)))
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=28, 
+                            outline=(p_color[0], p_color[1], p_color[2], int(100 * ease)), width=3)
+        
+        dot_r = 6
+        cd.ellipse([sx + 28 - dot_r, sy + 24 - dot_r, sx + 28 + dot_r, sy + 24 + dot_r], 
+                  fill=(255, 95, 86, int(255 * ease)))
+        cd.ellipse([sx + 52 - dot_r, sy + 24 - dot_r, sx + 52 + dot_r, sy + 24 + dot_r], 
+                  fill=(255, 189, 46, int(255 * ease)))
+        cd.ellipse([sx + 76 - dot_r, sy + 24 - dot_r, sx + 76 + dot_r, sy + 24 + dot_r], 
+                  fill=(40, 201, 64, int(255 * ease)))
+        
+        img = Image.alpha_composite(img.convert('RGBA'), card_overlay).convert('RGB')
+        draw = ImageDraw.Draw(img)
+        
+        content_top = sy + 50
+        start_y = content_top + (sh - 50 - total_h) // 2
+        
+        for line_idx, line in enumerate(lines):
+            line_text = ' '.join(line)
+            lw = sum(draw.textbbox((0, 0), w, font=font)[2] for w in line)
+            lw += (len(line) - 1) * 10
+            lx = sx + (sw - lw) // 2
+            ly = start_y + line_idx * line_h
+            
+            rgb = hex_to_rgb(text_palette[line_idx % len(text_palette)]) if text_palette else p_color
+            
+            draw.text((lx + 2, ly + 2), line_text, fill=(10, 10, 20), font=font)
+            draw.text((lx, ly), line_text, fill=rgb, font=font)
+    
+    elif sub_type == 'CODE' and len(words) > 0:
+        word_reveal = min(1.0, progress * 2.5)
+        visible_count = max(1, int(len(words) * word_reveal))
+        visible_words = words[:visible_count]
+        
+        code_padding_x = 60
+        code_padding_y = 50
+        code_margin = 60
+        code_max_width = WIDTH - code_margin * 2
+        code_max_height = HEIGHT - 250
+        
+        min_font = 22
+        max_font = 42
+        font_size = max_font
+        
+        code_font = get_font(font_size)
+        code_text = ' '.join(visible_words)
+        
+        lines = code_text.split()
+        line_h = int(font_size * 1.5)
+        
+        total_h = len(lines) * line_h
+        max_line_len = max(len(line) for line in lines) if lines else 1
+        total_w = draw.textbbox((0, 0), ' ' * max_line_len, font=code_font)[2]
+        
+        while (total_h > code_max_height - code_padding_y * 2 or total_w > code_max_width - code_padding_x * 2) and font_size > min_font:
+            font_size -= 2
+            code_font = get_font(font_size)
+            line_h = int(font_size * 1.5)
+            total_h = len(lines) * line_h
+            max_line_len = max(len(line) for line in lines) if lines else 1
+            total_w = draw.textbbox((0, 0), ' ' * max_line_len, font=code_font)[2]
+        
+        code_width = min(total_w + code_padding_x * 2, code_max_width)
+        code_height = min(total_h + code_padding_y * 2, code_max_height)
+        
+        ease = ease_out(word_reveal)
+        
+        scale = 0.85 + 0.15 * ease
+        cx, cy = WIDTH // 2, HEIGHT // 2
+        sw, sh = int(code_width * scale), int(code_height * scale)
+        sx, sy = cx - sw // 2, cy - sh // 2
+        
+        code_overlay = Image.new('RGBA', (WIDTH, HEIGHT), (0, 0, 0, 0))
+        cd = ImageDraw.Draw(code_overlay)
+        
+        cd.rectangle([sx - 8, sy - 8, sx + sw + 8, sy + sh + 8], 
+                    fill=(0, 0, 0, int(30 * ease)))
+        
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=16, 
+                            fill=(20, 20, 32, int(250 * ease)))
+        
+        for i in range(5):
+            offset = 5 - i
+            alpha = int(20 * (1 - i * 0.15) * ease)
+            if alpha > 0:
+                cd.rounded_rectangle([sx - offset, sy - offset, sx + sw + offset, sy + sh + offset], 
+                                    radius=16 + offset, outline=(p_color[0] // 3, p_color[1] // 3, p_color[2] // 3, alpha), width=1)
+        
+        cd.rounded_rectangle([sx, sy, sx + sw, sy + sh], radius=16, 
+                            outline=(p_color[0], p_color[1], p_color[2], int(60 * ease)), width=2)
+        
+        cd.rectangle([sx, sy, sx + sw, sy + 36], 
+                    fill=(p_color[0] // 6, p_color[1] // 6, p_color[2] // 6, int(150 * ease)))
+        cd.rectangle([sx, sy + 35, sx + sw, sy + 36], 
+                    fill=(p_color[0], p_color[1], p_color[2], int(40 * ease)))
+        
+        tab_r = 6
+        cd.ellipse([sx + 20 - tab_r, sy + 18 - tab_r, sx + 20 + tab_r, sy + 18 + tab_r], 
+                  fill=(255, 95, 86, int(255 * ease)))
+        cd.ellipse([sx + 40 - tab_r, sy + 18 - tab_r, sx + 40 + tab_r, sy + 18 + tab_r], 
+                  fill=(255, 189, 46, int(255 * ease)))
+        cd.ellipse([sx + 60 - tab_r, sy + 18 - tab_r, sx + 60 + tab_r, sy + 18 + tab_r], 
+                  fill=(40, 201, 64, int(255 * ease)))
+        
+        img = Image.alpha_composite(img.convert('RGBA'), code_overlay).convert('RGB')
+        draw = ImageDraw.Draw(img)
+        
+        start_y = sy + 50
+        
+        keywords = ['def', 'class', 'if', 'else', 'elif', 'for', 'while', 'return', 'import', 'from', 'try', 'except', 'with', 'as', 'async', 'await', 'True', 'False', 'None', 'and', 'or', 'not', 'in', 'is', 'print', 'function', 'const', 'let', 'var', 'export', 'default', 'new', 'this', 'typeof', 'instanceof']
+        string_chars = ['"', "'", '`']
+        
+        x_offset = sx + 30
+        y_pos = start_y
+        
+        for line_text in lines:
+            words_in_line = line_text.split()
+            x_pos = x_offset
+            
+            for word in words_in_line:
+                clean_word = word.strip('.,;:(){}[]<>=+-*/%!&|')
+                
+                if clean_word in keywords:
+                    color = hex_to_rgb("#FF79C6")
+                elif clean_word.startswith(('http', 'www')):
+                    color = hex_to_rgb("#8BE9FD")
+                elif clean_word.isdigit():
+                    color = hex_to_rgb("#BD93F9")
+                elif any(c in word for c in string_chars):
+                    color = hex_to_rgb("#F1FA8C")
+                elif clean_word in ['{', '}', '[', ']', '(', ')', ';', ':']:
+                    color = hex_to_rgb("#FFB86C")
+                elif '#' in word or '//' in word:
+                    color = hex_to_rgb("#6272A4")
+                else:
+                    color = hex_to_rgb("#F8F8F2")
+                
+                draw.text((x_pos + 1, y_pos + 1), word, fill=(15, 15, 25), font=code_font)
+                draw.text((x_pos, y_pos), word, fill=color, font=code_font)
+                
+                x_pos += draw.textbbox((0, 0), word, font=code_font)[2] + code_font.size // 4
+            
+            y_pos += line_h
     
     elif sub_type == 'PARAGRAPH' and len(words) > 0:
         word_reveal = min(1.0, progress * 2.5)

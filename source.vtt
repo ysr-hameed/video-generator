@@ -3,29 +3,32 @@ WEBVTT
 #HEADING
 What is an API
 
-#PARAGRAPH
-An API lets apps talk to each other.
+#CARD
+An API (Application Programming Interface) is a set of rules that allows different software applications to communicate with each other.
 
 #HEADING
-How APIs Work
+REST API Methods
 
-#PARAGRAPH
-Apps send requests through APIs to servers.
+#LIST
+GET retrieves data
 
-#HEADING
-REST APIs
+#LIST
+POST creates new data
 
-#PARAGRAPH
-REST APIs use GET, POST, PUT, DELETE methods.
+#LIST
+PUT updates existing data
 
-#HEADING
-API Security
-
-#PARAGRAPH
-API keys and auth protect your data.
+#LIST
+DELETE removes data
 
 #HEADING
-JSON Format
+Example Code
 
-#PARAGRAPH
-JSON is the common data format for APIs.
+#CODE
+fetch user data from API endpoint using async function getData return await response.json
+
+#CARD
+JSON (JavaScript Object Notation) is the most common data format for API responses. It is lightweight and easy to parse.
+
+#CODE
+const response = await fetch apiurl const data = await response.json console.log data
